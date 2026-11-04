@@ -1,0 +1,194 @@
+<!doctype html>
+<!-- Run from the repository root.
+npx hyperframes@0.9.12 render docs/readme-hero --format gif --fps 15 --gif-loop 0 -o docs/readme-hero.gif
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Notion Page</title>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/gsap.min.js"></script>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; color: #292621; background: #f4f0e9; font-family: system-ui, sans-serif; }
+    h1, h2, p, pre { margin: 0; }
+    #hero {
+      position: relative; width: 100%; height: 100%; overflow: hidden;
+      background: #f4f0e9;
+    }
+    #stage { position: absolute; inset: 0; }
+    .grid {
+      position: absolute; inset: 26px 30px 26px 414px;
+      background: radial-gradient(circle, #d2cabe 1px, transparent 1.5px) 0 0 / 14px 14px;
+      border-radius: 22px;
+    }
+    .identity { position: absolute; top: 126px; left: 59px; width: 365px; }
+    .label {
+      display: inline-flex; gap: 9px; align-items: center;
+      font: 700 17px ui-monospace, monospace; letter-spacing: .09em; color: #524467;
+    }
+    .label::before { content: ""; width: 12px; height: 12px; background: #815bb7; border-radius: 3px; }
+    h1 {
+      margin: 14px 0 12px; font-size: 64px; font-weight: 830;
+      letter-spacing: -.055em; word-spacing: .04em; line-height: 1;
+    }
+    .identity p { color: #5a4e62; font-size: 25px; font-weight: 560; letter-spacing: -.04em; }
+    .command {
+      display: inline-flex; gap: 10px; align-items: center; margin-top: 29px;
+      padding: 13px 15px; border: 1px solid #d6c8e0; border-radius: 8px;
+      color: #3c2c49; background: #e9dff1; font: 700 17px ui-monospace, monospace;
+    }
+    .command span { color: #684392; }
+    .panel { position: absolute; border-radius: 14px; box-shadow: 0 10px 23px #372a3529; }
+    .filebar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 17px; height: 44px; font: 700 16px ui-monospace, monospace;
+    }
+    .dots { display: flex; gap: 5px; }
+    .dots i { width: 7px; height: 7px; border-radius: 50%; background: #93849c; }
+    .source {
+      z-index: 4; left: 493px; top: 109px; width: 492px; height: 302px;
+      color: #f5e9f5; background: #29242c; border: 1px solid #4e4253;
+    }
+    .source .filebar { color: #f5e9f5; border-bottom: 1px solid #56485b; }
+    .source pre { padding: 20px 23px; font: 18px/1.55 ui-monospace, monospace; }
+    .source .syntax { color: #dec0ff; }
+    .source .task-token { color: #b9e4b4; }
+    .sheet {
+      z-index: 3; left: 442px; top: 85px; width: 375px; height: 350px;
+      border: 1px solid #d8c9d7; color: #302a31; background: #fffcf7; overflow: hidden;
+    }
+    .sheet .filebar { color: #614d69; background: #faf4fa; border-bottom: 1px solid #d8c9d7; }
+    .cover { height: 70px; background: linear-gradient(110deg, #d9c7ea, #b497d9); }
+    .sheet-content { padding: 16px 23px; }
+    .sheet-content h2 { font-size: 35px; font-weight: 790; letter-spacing: -.04em; }
+    .note { margin-top: 12px; color: #5d515e; font-size: 17px; font-weight: 540; }
+    .sheet-callout {
+      margin-top: 16px; padding: 12px 13px; border-radius: 7px; background: #f0e4f3;
+      color: #4e3b58; font-size: 17px; font-weight: 650;
+    }
+    .sheet-row { margin-top: 13px; display: flex; gap: 8px; color: #5d515e; font-size: 16px; }
+    .card {
+      z-index: 5; left: 844px; width: 218px; padding: 13px 15px;
+      border: 1px solid #d8c9d7; background: #fffdf8;
+    }
+    .card-title { font-size: 18px; font-weight: 770; }
+    .card-copy { margin-top: 5px; font-size: 15px; font-weight: 560; }
+    .callout { top: 92px; background: #efe1f3; color: #50355d; }
+    .toggle { top: 195px; color: #3e3844; }
+    .tasks { top: 291px; background: #e5efdc; color: #35492f; }
+    .code { top: 386px; color: #f5e9f5; background: #342c38; border-color: #5f5065; }
+    .code .card-copy { font: 700 15px ui-monospace, monospace; color: #e0c5f9; }
+    .sheet, .card, .spark, .orbit { opacity: 0; }
+    .spark {
+      position: absolute; z-index: 2; left: 770px; top: 252px;
+      width: 8px; height: 8px; background: #8f67b6; border-radius: 2px;
+    }
+    .orbit {
+      position: absolute; z-index: 1; left: 677px; top: 169px; width: 190px; height: 190px;
+      border: 3px solid #a176c5; border-radius: 50%;
+    }
+  </style>
+</head>
+<body>
+  <div data-hf-id="hf-1dot" id="hero" data-composition-id="hero" data-width="1120" data-height="520" data-start="0" data-duration="6.4">
+    <section data-hf-id="hf-hqw9" id="stage">
+      <div data-hf-id="hf-80b5" class="grid" data-layout-ignore></div>
+      <div data-hf-id="hf-wk3y" class="identity">
+        <div data-hf-id="hf-wlsi" class="label">RUST CLI</div>
+        <h1 data-hf-id="hf-3qqq">Notion Page</h1>
+        <p data-hf-id="hf-3uz5">Markdown → HTML</p>
+        <div data-hf-id="hf-5sa1" class="command" id="command"><span data-hf-id="hf-my1r">$</span> notion-page notes.md</div>
+      </div>
+      <div data-hf-id="hf-zcoh" class="orbit" data-layout-ignore></div>
+      <div data-hf-id="hf-99fp" class="spark" id="spark-1" data-layout-ignore></div>
+      <div data-hf-id="hf-ff5i" class="spark" id="spark-2" data-layout-ignore></div>
+      <div data-hf-id="hf-jd9j" class="spark" id="spark-3" data-layout-ignore></div>
+      <div data-hf-id="hf-nbdk" class="spark" id="spark-4" data-layout-ignore></div>
+      <div data-hf-id="hf-o31d" class="spark" id="spark-5" data-layout-ignore></div>
+      <div data-hf-id="hf-s15e" class="spark" id="spark-6" data-layout-ignore></div>
+
+      <article data-hf-id="hf-4k3h" class="panel source" id="source">
+        <div data-hf-id="hf-d2md" class="filebar"><span data-hf-id="hf-hvy1">notes.md</span><span data-hf-id="hf-uvem" class="dots" aria-hidden="true"><i data-hf-id="hf-wt6k"></i><i data-hf-id="hf-zeb8"></i><i data-hf-id="hf-y7e5"></i></span></div>
+        <pre data-hf-id="hf-05do"><span data-hf-id="hf-ghex" class="syntax">---
+title:</span> Project notes
+<span data-hf-id="hf-323x" class="syntax">---</span>
+
+<span data-hf-id="hf-082u" class="syntax">:::callout</span> 💡 purple
+Ship the first draft.
+<span data-hf-id="hf-qnqm" class="syntax">:::</span>
+<span data-hf-id="hf-k3c3" class="task-token">- [x]</span> Outline the idea</pre>
+      </article>
+
+      <article data-hf-id="hf-fnk7" class="panel sheet" id="sheet">
+        <div data-hf-id="hf-a7yx" class="filebar"><span data-hf-id="hf-zklx">notes.html</span><span data-hf-id="hf-1y76" class="dots" aria-hidden="true"><i data-hf-id="hf-ylp6"></i><i data-hf-id="hf-0l8b"></i><i data-hf-id="hf-0zjc"></i></span></div>
+        <div data-hf-id="hf-ze0h" class="cover"></div>
+        <div data-hf-id="hf-x029" class="sheet-content">
+          <h2 data-hf-id="hf-5x61">Project notes</h2>
+          <p data-hf-id="hf-oi40" class="note">From idea to first draft.</p>
+          <div data-hf-id="hf-81ci" class="sheet-callout">💡 Ship the first draft.</div>
+          <div data-hf-id="hf-ar2f" class="sheet-row">☑ Outline the idea</div>
+        </div>
+      </article>
+
+      <article data-hf-id="hf-wvdx" class="panel card callout" id="callout">
+        <div data-hf-id="hf-zf7d" class="card-title">💡 Callout</div>
+        <div data-hf-id="hf-i6si" class="card-copy">Ship the first draft.</div>
+      </article>
+      <article data-hf-id="hf-dm31" class="panel card toggle" id="toggle">
+        <div data-hf-id="hf-jopd" class="card-title">▾ Toggle</div>
+        <div data-hf-id="hf-tee7" class="card-copy">The details, on demand.</div>
+      </article>
+      <article data-hf-id="hf-oxu9" class="panel card tasks" id="tasks">
+        <div data-hf-id="hf-sjnh" class="card-title">☑ Task list</div>
+        <div data-hf-id="hf-9ykg" class="card-copy">Outline the idea</div>
+      </article>
+      <article data-hf-id="hf-ipvl" class="panel card code" id="code">
+        <div data-hf-id="hf-e0uf" class="card-title">Code block</div>
+        <div data-hf-id="hf-wvh6" class="card-copy">fn main() {}</div>
+      </article>
+    </section>
+  </div>
+  <script>
+    const timeline = gsap.timeline({ paused: true });
+    const visible = { x: 0, y: 0, scale: 1, rotation: 0, opacity: 1 };
+    const sheetStart = { x: 130, y: 13, scale: .65, rotation: 5, opacity: 0 };
+    const sourceExit = { x: -45, y: -22, scale: .83, rotation: -5, opacity: 0 };
+    const cardOrigins = [
+      { id: "#callout", x: -177, y: 107, rotation: -12 },
+      { id: "#toggle", x: -187, y: 22, rotation: 10 },
+      { id: "#tasks", x: -161, y: -63, rotation: -11 },
+      { id: "#code", x: -199, y: -136, rotation: 13 },
+    ];
+
+    timeline.set("#source", visible, 0);
+    timeline.fromTo("#command", { scale: 1 }, { scale: .94, duration: .16, ease: "power2.in" }, .66);
+    timeline.to("#command", { scale: 1, duration: .34, ease: "back.out(2)" }, .82);
+    timeline.to("#source", { ...sourceExit, duration: .32, ease: "power2.in" }, .83);
+    timeline.set("#sheet", sheetStart, 0);
+    timeline.to("#sheet", { ...visible, duration: .68, ease: "back.out(1.35)" }, 1.16);
+
+    cardOrigins.forEach(({ id, x, y, rotation }, index) => {
+      const origin = { x, y, rotation, scale: .44, opacity: 0 };
+      timeline.set(id, origin, 0);
+      timeline.to(id, { ...visible, duration: .65, ease: "back.out(1.55)" }, 1.56 + index * .14);
+      timeline.to(id, { ...origin, duration: .52, ease: "power2.in" }, 5.05 + (3 - index) * .055);
+    });
+
+    timeline.set(".orbit", { opacity: 0, scale: .32 }, 0);
+    timeline.to(".orbit", { opacity: .55, scale: .8, duration: .14 }, 1.48);
+    timeline.to(".orbit", { opacity: 0, scale: 1.95, duration: .48, ease: "power2.out" }, 1.62);
+    const rays = [[-95,-122], [136,-149], [260,-83], [238,82], [105,180], [-103,143]];
+    rays.forEach(([x, y], index) => {
+      const id = `#spark-${index + 1}`;
+      timeline.set(id, { x: 0, y: 0, opacity: 0, scale: .4 }, 0);
+      timeline.to(id, { x: x * .35, y: y * .35, opacity: .9, scale: 1.35, duration: .20 }, 1.55);
+      timeline.to(id, { x, y, opacity: 0, rotation: 85, scale: .45, duration: .50, ease: "power2.out" }, 1.75);
+    });
+
+    timeline.to("#sheet", { ...sheetStart, duration: .47, ease: "power2.in" }, 5.28);
+    timeline.to("#source", { ...visible, duration: .52, ease: "power3.out" }, 5.77);
+    window.__timelines["hero"] = timeline;
+  </script>
+</body>
+</html>
