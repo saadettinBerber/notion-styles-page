@@ -1,3 +1,4 @@
+mod archive;
 mod build;
 
 use std::path::PathBuf;
@@ -9,6 +10,8 @@ const HELP_FOOTER: &str = "\
 Examples
   notion-page notes.md
   notion-page notes/*.md --output pages
+  notion-page --archive notes.md
+  notion-page --restore notes.html
 
 Exit Codes
   0  Success
@@ -23,18 +26,33 @@ Exit Codes
     after_help = HELP_FOOTER
 )]
 struct Args {
-    /// Markdown files to convert
+    /// Markdown files to convert, or HTML archives to restore
     #[arg(required = true, value_name = "FILES")]
     sources: Vec<PathBuf>,
 
-    /// Write HTML to this directory (default: next to each source file)
+    /// Write output to this directory (default: next to each source file)
     #[arg(short = 'o', long = "output", alias = "cikti", value_name = "DIR")]
     output_dir: Option<PathBuf>,
+
+    /// Embed the Markdown in the HTML and remove the original after saving
+    #[arg(long, conflicts_with = "restore")]
+    archive: bool,
+
+    /// Recover the original Markdown from an HTML archive
+    #[arg(long)]
+    restore: bool,
 }
 
 pub(crate) fn run() -> ExitCode {
     let args = Args::parse();
-    match build::run(&args.sources, args.output_dir.as_deref(), report) {
+    let mode = if args.archive {
+        build::Mode::Archive
+    } else if args.restore {
+        build::Mode::Restore
+    } else {
+        build::Mode::Convert
+    };
+    match build::run(&args.sources, args.output_dir.as_deref(), mode, report) {
         Ok(true) => ExitCode::SUCCESS,
         Ok(false) => ExitCode::FAILURE,
         Err(error) => {
