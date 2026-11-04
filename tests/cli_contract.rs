@@ -84,6 +84,10 @@ fn default_output_sits_next_to_unicode_source() {
     assert_success(&result, "✓ İlk sayfa.md → İlk sayfa.html\n");
     let html = fs::read_to_string(workspace.path().join("notlar/İlk sayfa.html")).unwrap();
     assert!(html.contains("<p>Gövde</p>"));
+    assert_eq!(
+        fs::read(workspace.path().join("notlar/İlk sayfa.md")).unwrap(),
+        PAGE.as_bytes()
+    );
 }
 
 #[test]
@@ -195,6 +199,166 @@ fn legacy_command_and_flag_produce_the_same_html() {
         fs::read(workspace.path().join("current/not.html")).unwrap(),
         fs::read(workspace.path().join("legacy/not.html")).unwrap(),
     );
+}
+
+#[test]
+fn archive_removes_markdown_and_restore_recovers_its_exact_bytes() {
+    let workspace = tempdir().unwrap();
+    let directory = workspace.path();
+    let source = "---\r\nbaslik: Arşiv\r\n---\r\n\r\n__Gövde__\r\n\r\n`--> </script> &`  ";
+    write(directory, "notlar/İlk sayfa.md", source);
+
+    let archived = run(
+        directory,
+        &["--archive", "notlar/İlk sayfa.md", "--output", "pages"],
+    );
+
+    assert_success(&archived, "✓ İlk sayfa.md → İlk sayfa.html\n");
+    assert!(!directory.join("notlar/İlk sayfa.md").exists());
+    let html = fs::read_to_string(directory.join("pages/İlk sayfa.html")).unwrap();
+    assert!(html.contains("<p><strong>Gövde</strong></p>"));
+
+    let restored = Command::new(env!("CARGO_BIN_EXE_uret"))
+        .args(["--restore", "pages/İlk sayfa.html", "--cikti", "notlar"])
+        .current_dir(directory)
+        .output()
+        .unwrap();
+
+    assert_success(&restored, "✓ İlk sayfa.html → İlk sayfa.md\n");
+    assert_eq!(
+        fs::read(directory.join("notlar/İlk sayfa.md")).unwrap(),
+        source.as_bytes()
+    );
+    assert_eq!(
+        fs::read_to_string(directory.join("pages/İlk sayfa.html")).unwrap(),
+        html
+    );
+}
+
+#[test]
+fn archive_keeps_sources_when_a_page_fails_to_render_or_output_exists() {
+    let workspace = tempdir().unwrap();
+    let directory = workspace.path();
+    let invalid_cover = "---\nbaslik: Deneme\nkapak: lacivert\n---\n";
+    write(directory, "invalid.md", invalid_cover);
+    write(directory, "existing.md", PAGE);
+    write(directory, "existing.html", "Existing HTML");
+    write(directory, "good.md", PAGE);
+
+    let result = run(
+        directory,
+        &["--archive", "invalid.md", "existing.md", "good.md"],
+    );
+
+    assert_eq!(result.status.code(), Some(1));
+    assert_eq!(
+        fs::read_to_string(directory.join("invalid.md")).unwrap(),
+        invalid_cover
+    );
+    assert!(!directory.join("invalid.html").exists());
+    assert_eq!(
+        fs::read_to_string(directory.join("existing.md")).unwrap(),
+        PAGE
+    );
+    assert_eq!(
+        fs::read_to_string(directory.join("existing.html")).unwrap(),
+        "Existing HTML"
+    );
+    assert!(!directory.join("good.md").exists());
+    assert!(directory.join("good.html").is_file());
+}
+
+#[test]
+fn regular_conversion_preserves_an_archive_with_the_same_output_name() {
+    let workspace = tempdir().unwrap();
+    let directory = workspace.path();
+    let source = format!("{PAGE}\n{}", "Gövde ".repeat(2_000));
+    write(directory, "original/notes.md", &source);
+    write(directory, "other/notes.md", PAGE);
+    let archived = run(
+        directory,
+        &["--archive", "original/notes.md", "--output", "shared"],
+    );
+    assert_success(&archived, "✓ notes.md → notes.html\n");
+    let archive_path = directory.join("shared/notes.html");
+    let mut archive = fs::read_to_string(&archive_path).unwrap();
+    archive.push_str(&"\r\n".repeat(5_000));
+    fs::write(&archive_path, &archive).unwrap();
+
+    let result = run(directory, &["other/notes.md", "--output", "shared"]);
+
+    assert_eq!(result.status.code(), Some(1));
+    assert_eq!(fs::read_to_string(&archive_path).unwrap(), archive);
+    let restored = run(directory, &["--restore", "shared/notes.html"]);
+    assert_success(&restored, "✓ notes.html → notes.md\n");
+    assert_eq!(
+        fs::read_to_string(directory.join("shared/notes.md")).unwrap(),
+        source
+    );
+}
+
+#[test]
+fn restore_rejects_older_html_and_preserves_an_existing_markdown_file() {
+    let workspace = tempdir().unwrap();
+    let directory = workspace.path();
+    write(directory, "older.html", "<!doctype html><p>Older HTML</p>");
+    write(directory, "notes.md", PAGE);
+    let archived = run(directory, &["--archive", "notes.md"]);
+    assert_success(&archived, "✓ notes.md → notes.html\n");
+    write(directory, "notes.md", "Existing Markdown");
+
+    let result = run(directory, &["--restore", "older.html", "notes.html"]);
+
+    assert_eq!(result.status.code(), Some(1));
+    let stderr = str::from_utf8(&result.stderr).unwrap();
+    assert!(stderr.contains("older.html"));
+    assert!(stderr.contains("notes.html"));
+    assert!(!directory.join("older.md").exists());
+    assert_eq!(
+        fs::read_to_string(directory.join("notes.md")).unwrap(),
+        "Existing Markdown"
+    );
+}
+
+#[test]
+fn restore_rejects_a_damaged_embedded_source() {
+    let workspace = tempdir().unwrap();
+    let directory = workspace.path();
+    write(directory, "notes.md", PAGE);
+    let archived = run(directory, &["--archive", "notes.md"]);
+    assert_success(&archived, "✓ notes.md → notes.html\n");
+
+    let path = directory.join("notes.html");
+    let html = fs::read_to_string(&path).unwrap();
+    let source_prefix = Regex::new(r"(<!-- notion-sayfa-markdown:v1:[[:xdigit:]]+:)L").unwrap();
+    let damaged = source_prefix.replace(&html, "${1}A");
+    assert_ne!(damaged, html);
+    fs::write(path, damaged.as_bytes()).unwrap();
+
+    let result = run(directory, &["--restore", "notes.html"]);
+
+    assert_eq!(result.status.code(), Some(1));
+    assert!(!directory.join("notes.md").exists());
+}
+
+#[cfg(unix)]
+#[test]
+fn archive_refuses_to_remove_a_symlink() {
+    let workspace = tempdir().unwrap();
+    let directory = workspace.path();
+    write(directory, "target.md", PAGE);
+    let link = directory.join("link.md");
+    std::os::unix::fs::symlink("target.md", &link).unwrap();
+
+    let result = run(directory, &["--archive", "link.md"]);
+
+    assert_eq!(result.status.code(), Some(1));
+    assert!(link.is_symlink());
+    assert_eq!(
+        fs::read_to_string(directory.join("target.md")).unwrap(),
+        PAGE
+    );
+    assert!(!directory.join("link.html").exists());
 }
 
 fn run(directory: &Path, arguments: &[&str]) -> Output {

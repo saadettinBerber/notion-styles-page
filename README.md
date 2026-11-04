@@ -28,6 +28,21 @@ notion-page notes.md
 
 Open `notes.html`.
 
+To keep only the HTML file, use archive mode. It embeds the exact Markdown in
+the HTML and removes the `.md` file after saving the archive. Restore the
+original Markdown whenever you need to edit it.
+
+```sh
+notion-page --archive notes.md
+notion-page --restore notes.html
+```
+
+Both commands refuse to overwrite an existing output. If `notes.html` already
+exists, run `notion-page --archive notes.md --output archives`. Regular
+conversions also refuse to overwrite an HTML archive. Only HTML created with
+`--archive` supports `--restore`. Anyone with a copy of the archive can extract
+the source Markdown.
+
 ```sh
 notion-page --help
 notion-page --version

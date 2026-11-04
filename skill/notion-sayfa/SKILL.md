@@ -36,6 +36,8 @@ Sayfanın anlatımı, örnekleri ve sırası kullanıcıdan gelir. Sen onu bu ka
    ```
 
    Her dosya için bir `✓` satırı görünür. `✗` satırı hatanın nedenini söyler: düzelt ve yeniden üret.
+
+   Kullanıcı yalnızca HTML dosyasını saklamak isterse `notion-page --archive notes.md` kullan. Bu komut Markdown'ı HTML'ye gömer ve kaynak dosyayı HTML kaydedildikten sonra siler. `notion-page --restore notes.html` özgün Markdown'ı geri çıkarır. Hedef dosya zaten varsa `--output` ile başka bir dizin seç.
 3. **Göster.** Sayfayı tarayıcıda aç ve kendin bak: taşan yazı, çizgiye binen etiket, açıkta kalmış bir `:::` satırı, koyu temada okunmayan bir şey, telefonda taşma. Sorun varsa düzeltip yeniden üret, sonra kullanıcıya göster. Video gömülü büyük sayfalar bazı tarayıcılarda `file://` ile açılmaz. O zaman sayfanın klasöründe `python3 -m http.server 8000` çalıştır ve `http://127.0.0.1:8000/sayfa.html` adresini aç.
 
 ## Hangi blok ne için
