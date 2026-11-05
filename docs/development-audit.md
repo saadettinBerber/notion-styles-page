@@ -1,5 +1,9 @@
 # Development verification
 
+## 2026-11-05 · README purpose
+
+Added a short paragraph below the tagline explaining the shared note format across AI agents and the personal preference for a Notion-style layout. `cargo fmt --check`, `cargo clippy --locked --all-targets -- -D warnings`, `cargo test --locked` (64 tests), and `git diff --check` passed.
+
 ## 2026-11-05 · Git naming
 
 Documented change-type branch prefixes, Conventional Commit subjects, and the `codex/` prohibition. `git diff --check` passed; source code matches the version with 64 passing tests and clean Rustfmt/Clippy.

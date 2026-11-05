@@ -7,6 +7,9 @@
 
 **Markdown → Notion-style HTML.** One file. Opens offline.
 
+I built this to give notes from any AI agent a consistent format, with the
+Notion-style layout I like.
+
 <a id="kurulum"></a>
 
 ## Install
