@@ -77,6 +77,31 @@ mutlak yol ve üst dizin geçişini reddeder. `inspect_image(content)`, dosya
 açmadan aynı doğrulamayı uygular ve `ImageInfo(media_type, width, height)`
 döndürür. Medya erişimine izin verme kararı çağırana aittir.
 
-`load_page_template().render(topic, body_html, lang="tr", extra_styles="")`,
-verilen gövdeyi sayfa şablonuna yerleştirir. `writing_guide()`, Rust'a gömülen
+`load_page_template().render(topic, body_html, lang="tr", extra_styles="", font=None)`,
+verilen gövdeyi sayfa şablonuna yerleştirir. `font`, `"daily-dose"` veya
+`"system"` seçeneğidir. Varsayılan `daily-dose`, Noto Serif gövde ve Domine
+başlık fontlarını HTML'e gömer; sayfa internetsiz de aynı yazı tipleriyle açılır.
+`system`, işletim sisteminin yazı tiplerini ve önceki sayfa ölçülerini kullanır.
+Kod fontu bu seçimden bağımsızdır. `extra_styles` en son uygulanır.
+
+YAML başlığındaki `font:` değeri `document.topic.font` üzerinden taşınır.
+Alan belirtilmezse değeri `None` olur. `Topic` kurucusunun son, isteğe bağlı
+argümanı da `font=None` olduğundan yukarıdaki `Topic(body="", **vars(document.topic))`
+aktarımı font seçimini korur. Font alanı diğer `Topic` alanları gibi değişmezdir.
+Şablona açıkça verilen `font`, konunun seçiminden önceliklidir; ikisi de `None`
+ise `daily-dose` kullanılır. Bilinmeyen font adı `ValueError`, Python çağrısında
+metin dışındaki bir font değeri `TypeError` verir. Örneğin:
+
+```python
+topic = Topic("Notlar", "", font="system")
+page_html = load_page_template().render(topic, rendered.html, font="daily-dose")
+```
+
+Rust'ta aynı seçim `PageOptions { font: Some(FontPreset::System) }` ile
+`render_page_with_options` veya `render_shell_with_options` işlevine verilir.
+Mevcut `render_page` ve `render_shell` işlevleri belge seçimini ve ortak
+varsayılanı kullanmaya devam eder. Font seçimi Markdown gövdesini, belge
+sorgularını veya medya sağlayıcısını değiştirmez.
+
+`writing_guide()`, Rust'a gömülen
 [kanonik yazım kılavuzunu](yazim.md) döndürür.

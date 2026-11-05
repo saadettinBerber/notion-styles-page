@@ -31,6 +31,18 @@ notion-page notes.md
 
 Open `notes.html`.
 
+The default `daily-dose` typography uses Noto Serif for text and Domine for
+headings, inspired by Daily Dose of Data Science. Fonts are embedded in the
+HTML and work offline. Use the previous system font appearance with:
+
+```sh
+notion-page notes.md --font system
+```
+
+Set `font: daily-dose` or `font: system` in the Markdown frontmatter to keep a
+document's choice. `--font` overrides frontmatter; without either setting,
+`daily-dose` is used. Code keeps its monospace font.
+
 To keep only the HTML file, use archive mode. It embeds the exact Markdown in
 the HTML and removes the `.md` file after saving the archive. Restore the
 original Markdown whenever you need to edit it.

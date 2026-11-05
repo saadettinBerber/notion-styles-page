@@ -1,6 +1,6 @@
 use serde_yaml_ng::{Mapping, Value};
 
-use crate::PageError;
+use crate::{FontPreset, PageError};
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub struct Topic {
@@ -10,6 +10,8 @@ pub struct Topic {
     date: String,
     tags: Vec<String>,
     summary: String,
+    #[serde(default)]
+    font: Option<FontPreset>,
 }
 
 impl Topic {
@@ -41,6 +43,7 @@ impl Topic {
             date: field_text(fields, "tarih"),
             tags,
             summary: field_text(fields, "ozet"),
+            font: parse_font(fields.get("font"))?,
         })
     }
 
@@ -66,6 +69,10 @@ impl Topic {
 
     pub(crate) fn summary(&self) -> &str {
         &self.summary
+    }
+
+    pub(crate) fn font(&self) -> Option<FontPreset> {
+        self.font
     }
 }
 
@@ -155,6 +162,14 @@ fn parse_tags(value: Option<&Value>) -> Result<Vec<String>, PageError> {
         _ => Err(document_error(
             "'etiketler:' alanı [a, b] biçiminde bir liste ya da 'a, b' biçiminde bir metin olmalı.",
         )),
+    }
+}
+
+fn parse_font(value: Option<&Value>) -> Result<Option<FontPreset>, PageError> {
+    match value {
+        None | Some(Value::Null) => Ok(None),
+        Some(Value::String(name)) => name.parse().map(Some),
+        Some(_) => Err(document_error("'font:' alanı bir yazı tipi adı olmalı.")),
     }
 }
 

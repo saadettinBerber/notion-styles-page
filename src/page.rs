@@ -3,8 +3,14 @@ use std::sync::LazyLock;
 use percent_encoding::{AsciiSet, NON_ALPHANUMERIC, utf8_percent_encode};
 use regex::Regex;
 
-use crate::PageError;
 use crate::topic::Topic;
+use crate::{FontPreset, PageError};
+
+/// Explicit page appearance overrides. Unset fields use the document's choice.
+#[derive(Debug, Default, Clone, Copy)]
+pub struct PageOptions {
+    pub font: Option<FontPreset>,
+}
 
 const TEMPLATE: &str = include_str!("../assets/template.html");
 const STYLES: &str = include_str!("../assets/notion.css");
@@ -24,31 +30,35 @@ static PLACEHOLDER: LazyLock<Regex> =
 static DIAGRAM: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"(?s)(<figure\b[^>]*>\s*)(<svg\b.*?</svg>)").unwrap());
 
-pub(crate) fn render(topic: &Topic, body_html: &str, code_css: &str) -> Result<String, PageError> {
-    render_shell(topic, body_html, code_css, "tr", "")
-}
-
 pub(crate) fn render_shell(
     topic: &Topic,
     body_html: &str,
     code_css: &str,
     lang: &str,
     extra_css: &str,
+    options: &PageOptions,
 ) -> Result<String, PageError> {
     let cover = cover_html(topic.cover())?;
+    let font = options.font.or(topic.font()).unwrap_or_default();
     let mut styles = format!("{code_css}\n{STYLES}");
+    let font_styles = font.stylesheet();
+    if !font_styles.is_empty() {
+        styles.push('\n');
+        styles.push_str(font_styles);
+    }
     if !extra_css.is_empty() {
         styles.push('\n');
         styles.push_str(extra_css);
     }
     let body = DIAGRAM.replace_all(body_html, r#"${1}<div class="diagram-scroll">${2}</div>"#);
-    let values: [(&str, &str); 9] = [
+    let values: [(&str, &str); 10] = [
         ("lang", &escape_html(lang)),
         ("title", &escape_html(topic.title())),
         ("description", &escape_html(topic.summary())),
         ("favicon", &favicon(topic.icon())),
         ("icon", &escape_html(topic.icon())),
         ("styles", &styles),
+        ("font", font.as_str()),
         ("cover", &cover),
         ("properties", &properties_html(topic)),
         ("body", &body),
@@ -178,6 +188,17 @@ pub(crate) fn escape_html(text: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn render(topic: &Topic, body_html: &str, code_css: &str) -> Result<String, PageError> {
+        render_shell(
+            topic,
+            body_html,
+            code_css,
+            "tr",
+            "",
+            &PageOptions::default(),
+        )
+    }
 
     fn topic(header: &str) -> Topic {
         Topic::parse(&format!("---\n{header}\n---\n")).unwrap().0

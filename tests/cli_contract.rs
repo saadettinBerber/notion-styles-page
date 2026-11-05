@@ -53,6 +53,9 @@ fn help_and_missing_input_have_distinct_exit_codes() {
     let help_text = str::from_utf8(&help.stdout).unwrap();
     assert!(help_text.contains("Usage: notion-page"));
     assert!(help_text.contains("--output"));
+    assert!(help_text.contains("--font <PRESET>"));
+    assert!(help_text.contains("daily-dose"));
+    assert!(help_text.contains("system"));
     assert!(help_text.contains("--skills"));
     assert!(help_text.contains("--skill [<NAME>]"));
     assert!(help_text.contains("List skills and guides"));
@@ -158,11 +161,13 @@ fn skill_commands_reject_unknown_names_and_conversion_arguments() {
         &["--skill", "unknown"][..],
         &["--skill", "notion-page", "notes.md"],
         &["--skill", "--output", "pages"],
+        &["--skill", "--font", "system"],
         &["--skill", "--archive"],
         &["--skill", "--restore"],
         &["--skill", "--skills"],
         &["--skills", "notes.md"],
         &["--skills", "--output", "pages"],
+        &["--skills", "--font", "system"],
         &["--skills", "--archive"],
         &["--skills", "--restore"],
     ] {
@@ -172,24 +177,6 @@ fn skill_commands_reject_unknown_names_and_conversion_arguments() {
         assert!(!result.stderr.is_empty(), "{arguments:?}");
     }
     assert!(fs::read_dir(workspace.path()).unwrap().next().is_none());
-}
-
-#[test]
-fn legacy_binary_exposes_the_same_skill_commands() {
-    let workspace = tempdir().unwrap();
-
-    for arguments in [&["--skill"][..], &["--skill", "basic-make-notes"]] {
-        let result = run(workspace.path(), arguments);
-        let legacy = Command::new(env!("CARGO_BIN_EXE_uret"))
-            .args(arguments)
-            .current_dir(workspace.path())
-            .output()
-            .unwrap();
-
-        assert_eq!(legacy.status.code(), result.status.code());
-        assert_eq!(legacy.stdout, result.stdout);
-        assert_eq!(legacy.stderr, result.stderr);
-    }
 }
 
 #[test]
@@ -205,6 +192,82 @@ fn default_output_sits_next_to_unicode_source() {
     assert_eq!(
         fs::read(workspace.path().join("notlar/İlk sayfa.md")).unwrap(),
         PAGE.as_bytes()
+    );
+}
+
+#[test]
+fn font_selection_uses_cli_then_frontmatter_then_the_shared_default() {
+    let workspace = tempdir().unwrap();
+    write(workspace.path(), "default.md", PAGE);
+    write(
+        workspace.path(),
+        "system.md",
+        &PAGE.replace("baslik: Deneme", "baslik: Deneme\nfont: system"),
+    );
+    write(
+        workspace.path(),
+        "daily.md",
+        &PAGE.replace("baslik: Deneme", "baslik: Deneme\nfont: daily-dose"),
+    );
+
+    for (arguments, output, embedded) in [
+        (&["default.md"][..], "default.html", true),
+        (&["default.md", "--font", "system"], "default.html", false),
+        (&["system.md"], "system.html", false),
+        (&["system.md", "--font", "daily-dose"], "system.html", true),
+        (&["daily.md", "--font", "system"], "daily.html", false),
+    ] {
+        let result = run(workspace.path(), arguments);
+
+        assert_eq!(result.status.code(), Some(0), "{arguments:?}: {result:?}");
+        assert!(result.stderr.is_empty(), "{arguments:?}");
+        let html = fs::read_to_string(workspace.path().join(output)).unwrap();
+        assert_eq!(html.contains("@font-face"), embedded, "{arguments:?}");
+        assert_eq!(
+            html.contains("data:font/woff2;base64,"),
+            embedded,
+            "{arguments:?}"
+        );
+        if embedded {
+            assert!(html.contains("Noto Serif"));
+            assert!(html.contains("Domine"));
+        }
+        assert!(html.contains("<p>Gövde</p>"));
+    }
+}
+
+#[test]
+fn invalid_font_arguments_and_frontmatter_do_not_write_html() {
+    let workspace = tempdir().unwrap();
+    write(workspace.path(), "valid.md", PAGE);
+    let invalid = PAGE.replace("baslik: Deneme", "baslik: Deneme\nfont: papyrus");
+    write(workspace.path(), "invalid.md", &invalid);
+
+    for arguments in [
+        &["valid.md", "--font", "papyrus"][..],
+        &["--restore", "valid.html", "--font", "system"],
+    ] {
+        let result = run(workspace.path(), arguments);
+
+        assert_eq!(result.status.code(), Some(2), "{arguments:?}");
+        assert!(result.stdout.is_empty(), "{arguments:?}");
+        assert!(!result.stderr.is_empty(), "{arguments:?}");
+    }
+
+    let result = run(workspace.path(), &["invalid.md", "--font", "system"]);
+
+    assert_eq!(result.status.code(), Some(1));
+    assert!(result.stdout.is_empty());
+    assert!(str::from_utf8(&result.stderr).unwrap().contains("papyrus"));
+    assert!(!workspace.path().join("valid.html").exists());
+    assert!(!workspace.path().join("invalid.html").exists());
+    assert_eq!(
+        fs::read_to_string(workspace.path().join("valid.md")).unwrap(),
+        PAGE
+    );
+    assert_eq!(
+        fs::read_to_string(workspace.path().join("invalid.md")).unwrap(),
+        invalid
     );
 }
 
@@ -300,22 +363,24 @@ fn showcase_renders_documented_blocks_with_bundled_styles() {
 }
 
 #[test]
-fn legacy_command_and_flag_produce_the_same_html() {
+fn output_flag_alias_produces_the_same_html() {
     let workspace = tempdir().unwrap();
     write(workspace.path(), "not.md", PAGE);
 
-    let current = run(workspace.path(), &["not.md", "--output", "current"]);
-    let legacy = Command::new(env!("CARGO_BIN_EXE_uret"))
-        .args(["not.md", "--cikti", "legacy"])
-        .current_dir(workspace.path())
-        .output()
-        .unwrap();
+    let current = run(
+        workspace.path(),
+        &["not.md", "--output", "current", "--font", "system"],
+    );
+    let alias = run(
+        workspace.path(),
+        &["not.md", "--cikti", "alias", "--font", "system"],
+    );
 
     assert_success(&current, "✓ not.md → not.html\n");
-    assert_success(&legacy, "✓ not.md → not.html\n");
+    assert_success(&alias, "✓ not.md → not.html\n");
     assert_eq!(
         fs::read(workspace.path().join("current/not.html")).unwrap(),
-        fs::read(workspace.path().join("legacy/not.html")).unwrap(),
+        fs::read(workspace.path().join("alias/not.html")).unwrap(),
     );
 }
 
@@ -323,24 +388,31 @@ fn legacy_command_and_flag_produce_the_same_html() {
 fn archive_removes_markdown_and_restore_recovers_its_exact_bytes() {
     let workspace = tempdir().unwrap();
     let directory = workspace.path();
-    let source = "---\r\nbaslik: Arşiv\r\n---\r\n\r\n__Gövde__\r\n\r\n`--> </script> &`  ";
+    let source = "---\r\nbaslik: Arşiv\r\nfont: daily-dose\r\n---\r\n\r\n__Gövde__\r\n\r\n`--> </script> &`  ";
     write(directory, "notlar/İlk sayfa.md", source);
 
     let archived = run(
         directory,
-        &["--archive", "notlar/İlk sayfa.md", "--output", "pages"],
+        &[
+            "--archive",
+            "notlar/İlk sayfa.md",
+            "--output",
+            "pages",
+            "--font",
+            "system",
+        ],
     );
 
     assert_success(&archived, "✓ İlk sayfa.md → İlk sayfa.html\n");
     assert!(!directory.join("notlar/İlk sayfa.md").exists());
     let html = fs::read_to_string(directory.join("pages/İlk sayfa.html")).unwrap();
     assert!(html.contains("<p><strong>Gövde</strong></p>"));
+    assert!(!html.contains("@font-face"));
 
-    let restored = Command::new(env!("CARGO_BIN_EXE_uret"))
-        .args(["--restore", "pages/İlk sayfa.html", "--cikti", "notlar"])
-        .current_dir(directory)
-        .output()
-        .unwrap();
+    let restored = run(
+        directory,
+        &["--restore", "pages/İlk sayfa.html", "--output", "notlar"],
+    );
 
     assert_success(&restored, "✓ İlk sayfa.html → İlk sayfa.md\n");
     assert_eq!(

@@ -5,7 +5,7 @@ description: Markdown notlarını Notion görünümlü, tek dosyalık bir HTML s
 
 # Notion sayfası
 
-Bir `.md` dosyası yazılır, `notion-page` onu Notion görünümlü, tek dosyalık bir `.html` sayfasına çevirir. Sayfa internet gerektirmez, videolar sayfanın içine gömülür, dosya doğrudan gönderilebilir.
+Bir `.md` dosyası yazılır, `notion-page` onu Notion görünümlü, tek dosyalık bir `.html` sayfasına çevirir. Sayfa internet gerektirmez, videolar sayfanın içine gömülür, dosya doğrudan gönderilebilir. Varsayılan `daily-dose` yazı düzeni, Daily Dose of Data Science'tan esinlenir: metin Noto Serif, başlıklar Domine kullanır. Fontlar HTML'ye gömülür.
 
 Skill dizini `${CLAUDE_SKILL_DIR}`, aşağıda `$SKILL`:
 
@@ -42,6 +42,8 @@ Not oluştururken veya kısaltırken [../basic-make-notes.md](../basic-make-note
    ```
 
    Her dosya için bir `✓` satırı görünür. `✗` satırı hatanın nedenini söyler: düzelt ve yeniden üret.
+
+   Önceki sistem fontlu görünüm için `notion-page notes.md --font system` kullan. Seçim sayfada kalacaksa başlık bloğuna `font: system` yaz; diğer değer `daily-dose`. Komuttaki `--font`, başlık bloğundaki seçimi geçersiz kılar. İkisi de verilmezse `daily-dose` kullanılır. Kod fontu ayrıdır.
 
    Kullanıcı yalnızca HTML dosyasını saklamak isterse `notion-page --archive notes.md` kullan. Bu komut Markdown'ı HTML'ye gömer ve kaynak dosyayı HTML kaydedildikten sonra siler. `notion-page --restore notes.html` özgün Markdown'ı geri çıkarır. Hedef dosya zaten varsa `--output` ile başka bir dizin seç.
 3. **Göster.** Sayfayı tarayıcıda aç ve kendin bak: taşan yazı, çizgiye binen etiket, açıkta kalmış bir `:::` satırı, koyu temada okunmayan bir şey, telefonda taşma. Sorun varsa düzeltip yeniden üret, sonra kullanıcıya göster. Video gömülü büyük sayfalar bazı tarayıcılarda `file://` ile açılmaz. O zaman sayfanın klasöründe `python3 -m http.server 8000` çalıştır ve `http://127.0.0.1:8000/sayfa.html` adresini aç.

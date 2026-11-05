@@ -9,10 +9,6 @@ default-run = "notion-page"
 name = "notion-page"
 path = "src/main.rs"
 
-[[bin]]
-name = "uret"
-path = "src/uret.rs"
-
 [dependencies]
 base64 = "0.22"
 clap = { version = "4", features = ["derive"] }
