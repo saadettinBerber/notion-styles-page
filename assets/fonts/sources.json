@@ -1,0 +1,38 @@
+[
+  {
+    "file": "domine-latin-ext.woff2",
+    "source": "https://fonts.gstatic.com/s/domine/v25/L0x8DFMnlVwD4h3htfqnZypEi0K3.woff2",
+    "sha256": "3116ed836a707fe7ffbf14f0919c9d00c3a115af4b575419a93d254979254359",
+    "bytes": 14960
+  },
+  {
+    "file": "domine-latin.woff2",
+    "source": "https://fonts.gstatic.com/s/domine/v25/L0x8DFMnlVwD4h3hu_qnZypEiw.woff2",
+    "sha256": "8f2d6e617f47c946643f53599d33cb5eff1539f8cc7a91be49b533fdbba30b88",
+    "bytes": 28276
+  },
+  {
+    "file": "noto-serif-italic-latin-ext.woff2",
+    "source": "https://fonts.gstatic.com/l/font?kit=ga6xaw1J5X9T9RW6j9bNfFIMZhhWnFTyNZIQD1-_FXP0RgnaOg9MYBNLg6UEhloaU4YkGKGofYhx0SvhYri9Qg&skey=39fc6d597fb39b7e&v=v33",
+    "sha256": "34775ca9dfdf0e661e265ee56b9f969619e3970d371171d4dad4c5b4bc8e6a32",
+    "bytes": 146852
+  },
+  {
+    "file": "noto-serif-italic-latin.woff2",
+    "source": "https://fonts.gstatic.com/l/font?kit=ga6xaw1J5X9T9RW6j9bNfFIMZhhWnFTyNZIQD1-_FXP0RgnaOg9MYBNLg6UEhloaU4YkGKGofYhx3yvhYri9Qg&skey=39fc6d597fb39b7e&v=v33",
+    "sha256": "7b4c99dbe1cc2f112cc39537792439e09bf2b4ffb1bf1d2840f01beb0fcd54d7",
+    "bytes": 28480
+  },
+  {
+    "file": "noto-serif-latin-ext.woff2",
+    "source": "https://fonts.gstatic.com/l/font?kit=ga63aw1J5X9T9RW6j9bNVls-hfgvz8JcMofYTa32J4wsL2JAlAhZqFDBy-_7XjNxySgjDY7sQsVB3SHmQLo&skey=ff3f102bd67fc93c&v=v33",
+    "sha256": "5d4b081b163606f5cbe44193ae4095f314458630c8a8aad388183d2def7f75b7",
+    "bytes": 133372
+  },
+  {
+    "file": "noto-serif-latin.woff2",
+    "source": "https://fonts.gstatic.com/l/font?kit=ga63aw1J5X9T9RW6j9bNVls-hfgvz8JcMofYTa32J4wsL2JAlAhZqFDBy-_7XjNxySgjDY7sQstB3SHmQLo&skey=ff3f102bd67fc93c&v=v33",
+    "sha256": "d7b3eb78ac22d07a8a907c4d9a7055e1c6db3b022bc51878c01548a0f0e1a315",
+    "bytes": 26364
+  }
+]

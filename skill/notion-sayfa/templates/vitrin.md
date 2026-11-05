@@ -9,6 +9,11 @@ ozet: Dönüştürücünün desteklediği bütün blokların örnek sayfası.
 
 Bu sayfa gerçek bir sayfa değil. Dönüştürücünün her bloğu nasıl çizdiğini görmek için hazırlandı. Yeni bir sayfaya bu dosyayı kopyalayarak başlanabilir.
 
+Varsayılan `daily-dose` görünümünde gövde Noto Serif, başlıklar Domine kullanır.
+Türkçe örnek: Çığ, şüphe, öğün, İSTANBUL; **kalın düşünce**, *italik açıklama*.
+Fontlar gömülüdür ve internetsiz çalışır. Önceki görünüm için başlık bloğuna
+`font: system` yazılabilir veya `--font system` kullanılabilir.
+
 :::callout 💡 mavi
 **Callout** kutusu önemli bir fikri öne çıkarmak için kullanılır. İçine **kalın**, *italik*, `kod` ve [bağlantı](https://example.com) yazılabilir.
 :::
@@ -75,13 +80,13 @@ Telefonda sütunlar alt alta dizilir.
 ---
 
 <figure>
-<svg viewBox="0 0 680 140" role="img" aria-label="Soldan sağa: notlar.md dosyası uret ile tek dosyalık sayfa.html sayfasına çevrilir.">
+<svg viewBox="0 0 680 140" role="img" aria-label="Soldan sağa: notlar.md dosyası notion-page ile tek dosyalık sayfa.html sayfasına çevrilir.">
 <rect x="40" y="40" width="160" height="56" rx="10" class="diagram-box" stroke-width="1.5"/>
 <text x="120" y="74" text-anchor="middle" font-size="15" class="diagram-text">notlar.md</text>
 <line x1="200" y1="68" x2="250" y2="68" class="diagram-line" stroke-width="2"/>
 <polygon points="250,62 260,68 250,74" class="diagram-muted"/>
 <rect x="260" y="40" width="160" height="56" rx="10" class="diagram-node" stroke-width="1.5"/>
-<text x="340" y="74" text-anchor="middle" font-size="15" font-weight="600" class="diagram-text">uret</text>
+<text x="340" y="74" text-anchor="middle" font-size="15" font-weight="600" class="diagram-text">notion-page</text>
 <line x1="420" y1="68" x2="470" y2="68" class="diagram-line" stroke-width="2"/>
 <polygon points="470,62 480,68 470,74" class="diagram-muted"/>
 <rect x="480" y="40" width="160" height="56" rx="10" class="diagram-accent-line" stroke-width="2"/>
@@ -102,7 +107,7 @@ Videonun alt yazısı.
 ```
 
 Yerel Markdown görselinin yazımı aşağıdadır. Kütüphane çağıranı açıkça gömmeyi seçerse
-PNG, JPEG, GIF ve WebP dosyaları sayfanın içine alınır; normal `uret` kullanımı
+PNG, JPEG, GIF ve WebP dosyaları sayfanın içine alınır; normal `notion-page` kullanımı
 yolu olduğu gibi bırakır. Bu vitrin ek bir dosya gerektirmesin diye örnek kod olarak gösterilir:
 
 ```markdown

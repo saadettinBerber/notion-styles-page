@@ -1,0 +1,20 @@
+/* Daily Dose of Data Science'tan esinlenen okuma tipografisi. */
+:root {
+  --font: 'Noto Serif', Georgia, serif;
+  --font-heading: 'Domine', Georgia, serif;
+  --body-size: 20px;
+  --body-size-mobile: 18px;
+  --body-leading: 1.75;
+  --paragraph-gap: .8em;
+  --heading-weight: 700;
+  --strong-weight: 700;
+  --reading-text: #374151;
+  --heading-text: #111827;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --reading-text: #d1d5db;
+    --heading-text: #f3f4f6;
+  }
+}

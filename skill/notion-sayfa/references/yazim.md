@@ -25,8 +25,28 @@ ozet: Bu haftanın kararları ve açık soruları.
 | `tarih` | hayır | `YYYY-AA-GG`. |
 | `etiketler` | hayır | `[a, b]` ya da `a, b`. Aynı etiket her sayfada aynı renkte görünür. |
 | `ozet` | hayır | Tek cümle. Sayfada görünmez, bağlantı önizlemesinde kullanılır. |
+| `font` | hayır | `daily-dose` veya `system`. Varsayılan `daily-dose`; tanınmayan değer hata verir. |
 
 **Renk adları:** `gri`, `kahverengi`, `turuncu`, `sari`, `yesil`, `mavi`, `mor`, `pembe`, `kirmizi`. Türkçe karakterli yazımlar (`sarı`, `yeşil`, `kırmızı`) ve İngilizce adlar (`blue`, `green`, …) da geçer.
+
+## Yazı fontu
+
+Varsayılan `daily-dose`, Daily Dose of Data Science'ın yazı fontlarından esinlenir:
+gövde Noto Serif, başlıklar Domine kullanır. Normal, **kalın** ve *italik* metin ile
+Türkçe karakterler desteklenir. Font dosyaları HTML'ye gömüldüğü için internet gerekmez.
+`system`, önceki sistem fontlu görünümü kullanır. Kod her iki seçimde de eş aralıklı
+fontla gösterilir.
+
+Bir sayfanın seçimini başlık bloğuna yaz:
+
+```yaml
+font: system
+```
+
+Bir veya daha fazla dosyanın seçimini üretirken değiştirmek için
+`notion-page notes.md --font daily-dose` kullan. Öncelik komuttaki `--font`, sonra
+başlık bloğundaki `font`, sonra `daily-dose` varsayılanıdır. Arşivler de bu seçimi
+destekler; `--restore` ile font seçilmez, özgün Markdown olduğu gibi geri çıkarılır.
 
 ## Gövde: standart Markdown
 

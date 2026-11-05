@@ -27,7 +27,16 @@
 
   --font: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display",
     "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol";
+  --font-heading: var(--font);
   --mono: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace;
+  --body-size: 16px;
+  --body-size-mobile: var(--body-size);
+  --body-leading: 1.5;
+  --paragraph-gap: 2px;
+  --heading-weight: 600;
+  --strong-weight: 600;
+  --reading-text: var(--text);
+  --heading-text: var(--text);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -143,10 +152,21 @@ body {
 }
 
 /* Metin blokları */
+.page-body {
+  color: var(--reading-text);
+  font-size: var(--body-size);
+  line-height: var(--body-leading);
+  overflow-wrap: break-word;
+}
+.page-title, .page-body h1, .page-body h2, .page-body h3,
+.page-body h4, .page-body h5, .page-body h6, .toggle-heading > summary {
+  color: var(--heading-text);
+  font-family: var(--font-heading);
+}
 .page-body > :first-child { margin-top: 12px; }
-.page-body p { margin: 2px 0; padding: 3px 2px; min-height: 1em; }
+.page-body p { margin: var(--paragraph-gap) 0; padding: 3px 2px; min-height: 1em; }
 .page-body h1, .page-body h2, .page-body h3 {
-  font-weight: 600;
+  font-weight: var(--heading-weight);
   line-height: 1.3;
   padding: 3px 2px;
   margin-bottom: 1px;
@@ -154,7 +174,7 @@ body {
 .page-body h1 { font-size: 1.875em; margin-top: 2em; }
 .page-body h2 { font-size: 1.5em; margin-top: 1.4em; }
 .page-body h3 { font-size: 1.25em; margin-top: 1em; }
-.page-body h4, .page-body h5, .page-body h6 { font-size: 1em; font-weight: 600; margin-top: 1em; }
+.page-body h4, .page-body h5, .page-body h6 { font-size: 1em; font-weight: var(--heading-weight); margin-top: 1em; }
 
 .page-body a {
   color: var(--link);
@@ -164,7 +184,7 @@ body {
 }
 .page-body a:hover { text-decoration-color: var(--text); }
 
-.page-body strong { font-weight: 600; }
+.page-body strong { font-weight: var(--strong-weight); }
 .page-body mark { background: var(--mark); color: inherit; border-radius: 2px; padding: 0 2px; }
 
 .page-body ul, .page-body ol { margin: 2px 0; padding-left: 1.7em; }
@@ -354,6 +374,7 @@ body {
 /* Mobil */
 @media (max-width: 720px) {
   .page { padding: 0 16px 20vh; }
+  .page-body { font-size: var(--body-size-mobile); }
   .page-title { font-size: 32px; }
   .page-icon { font-size: 60px; height: 60px; }
   .property-label { width: 110px; }

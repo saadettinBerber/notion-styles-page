@@ -1,5 +1,37 @@
 # Development verification
 
+## 2026-11-05 · Selectable reading typography and CLI cleanup
+
+Three subagents reviewed the Rust, CLI, and Python boundaries. A shared
+`FontPreset` catalogue owns names, validation, and the default. The page shell
+resolves explicit CLI/API options, then document `font`, then `daily-dose`.
+Existing Rust functions and positional Python calls remain supported, including
+`Topic(body="", **vars(document.topic))`. Presentation CSS stays in assets;
+Markdown preparation and media providers do not load fonts.
+
+The default pairs Noto Serif text with Domine headings, a 20 px/1.75 reading
+rhythm (18 px on phones), paragraph spacing, and light/dark text colors.
+`system` retains the previous font appearance. Six licensed variable WOFF2
+files are embedded only for `daily-dose`, with full OFL notices. Original URLs
+and SHA-256 checksums are in `assets/fonts/sources.json`. FontTools confirmed
+Turkish glyph coverage in normal/italic fonts and weights 400–700.
+
+The obsolete `uret` binary was removed from Cargo targets, source, and the
+local Cargo installation at the user's request. Its skill parity test was
+removed; output-flag alias and archive restore coverage use `notion-page`.
+Installation now provides only `notion-page`.
+
+Verification: 64 Rust tests passed before changes (after rebuilding a stale
+cached test path). After changes, root Rustfmt, all-target Clippy with warnings
+denied, and 70 Rust tests passed. Python 3.12 installed the final wheel;
+binding Rustfmt/Clippy and 7 installed-package contract tests passed. Chrome
+verified both presets offline in light/dark desktop and 390 px phone layouts:
+no external requests, JavaScript errors, font loading failures, or page-level
+horizontal overflow. Actual platform fonts, Turkish bold/italic text, toggles,
+columns, SVG, code, and footnotes were checked. Updated the writing/API guides,
+showcase, and `docs/vitrin.png`; installed-command rendering worked outside the
+checkout. A separate final subagent review found no actionable issues.
+
 ## 2026-11-05 · README purpose
 
 Added a short paragraph below the tagline explaining the shared note format across AI agents and the personal preference for a Notion-style layout. `cargo fmt --check`, `cargo clippy --locked --all-targets -- -D warnings`, `cargo test --locked` (64 tests), and `git diff --check` passed.

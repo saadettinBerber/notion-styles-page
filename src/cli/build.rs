@@ -4,7 +4,7 @@ use std::fs;
 use std::io::{self, Seek, Write};
 use std::path::{Component, Path, PathBuf};
 
-use notion_sayfa::{LocalMedia, PageError, prepare_page, render_page};
+use notion_sayfa::{LocalMedia, PageError, PageOptions, prepare_page, render_page_with_options};
 use tempfile::NamedTempFile;
 
 use super::archive;
@@ -43,6 +43,7 @@ pub(crate) fn run(
     sources: &[PathBuf],
     output_dir: Option<&Path>,
     mode: Mode,
+    options: &PageOptions,
     mut report: impl FnMut(&Path, Result<PathBuf, BuildError>),
 ) -> Result<bool, BuildError> {
     let mut succeeded = true;
@@ -52,8 +53,8 @@ pub(crate) fn run(
         fs::create_dir_all(destination).map_err(|error| file_error(destination, error))?;
         for source in batch.sources {
             let result = match mode {
-                Mode::Convert => build_page(source, destination, &media, false),
-                Mode::Archive => build_page(source, destination, &media, true),
+                Mode::Convert => build_page(source, destination, &media, options, false),
+                Mode::Archive => build_page(source, destination, &media, options, true),
                 Mode::Restore => restore(source, destination),
             };
             succeeded &= result.is_ok();
@@ -93,6 +94,7 @@ fn build_page(
     source: &Path,
     destination: &Path,
     media: &LocalMedia<'_>,
+    options: &PageOptions,
     archive_source: bool,
 ) -> Result<PathBuf, BuildError> {
     if archive_source {
@@ -100,7 +102,7 @@ fn build_page(
     }
     let text = fs::read_to_string(source).map_err(|error| file_error(source, error))?;
     let page = prepare_page(&text).map_err(BuildError::Page)?;
-    let mut html = render_page(&page, media).map_err(BuildError::Page)?;
+    let mut html = render_page_with_options(&page, media, options).map_err(BuildError::Page)?;
     let output = output_path(source, destination, ".html");
     if archive_source {
         archive::embed(&mut html, &text);
