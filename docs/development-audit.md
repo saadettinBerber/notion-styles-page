@@ -196,3 +196,11 @@ using the updated template. Compared with the previous checked-in output, only
 the generator-path comment changed. Cargo metadata confirms that the installed
 binary target remains `notion-page` alone. No Python binding or page-rendering
 code changed.
+
+## 2026-11-05 · Rust implementation policy
+
+Documented in `AGENTS.md` that application logic, CLI features, development
+tools, and their tests must use Rust. Python is limited to library integration
+under `bindings/python` and its Python API contract tests; parsing and rendering
+remain in Rust. Rustfmt, all-target Clippy with warnings denied, all 87 Rust
+tests, and `git diff --check` passed.

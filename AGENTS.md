@@ -9,6 +9,8 @@ Follow [SKILL.md](skill/notion-page/SKILL.md) when using the skill. Use this gui
 
 ## Code
 
+- Write application logic, CLI features, development tools, and their tests in Rust.
+- Limit Python code to Python-library integration under `bindings/python` and its Python API contract tests. Keep parsing and rendering logic in Rust.
 - CLI parsing lives in `src/cli/mod.rs` and file handling in `src/cli/build.rs`. The library prepares documents and renders HTML.
 - Keep parser types in `src/markdown.rs` and `src/markdown/`. Keep page preparation free of media reads. The Rust media layer owns local media access and image validation.
 - The binary embeds `assets/template.html` and `assets/notion.css`. Use CSS variables for light and dark themes.
