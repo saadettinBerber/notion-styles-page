@@ -1,5 +1,21 @@
 # Development verification
 
+## 2026-11-05 · Turkish writing guide
+
+Added `turkish-writing` for Turkish sentence structure, natural phrasing,
+meaning and certainty, technical terminology, and spelling. Adapted the earlier
+Oku language/translation guidance from `just_read`, with links pinned to its
+source commit; checked language structure against published grammar/research
+and spelling against TDK. Both page-generation skills now route Turkish content
+to the guide. The CLI embeds it and lists its description; README documents it.
+
+Verification: all 71 baseline and updated Rust tests passed. Rustfmt, all-target
+Clippy with warnings denied, both skill metadata checks, and all 12 local links
+in the four edited Markdown documents passed. Metadata validation used a
+temporary Python environment with PyYAML. Reinstalled the CLI and verified its
+guide listing and byte-for-byte Turkish/main guide output outside the checkout,
+without creating files. Extended the existing CLI discovery/document tests.
+
 ## 2026-11-05 · English skill guides and paths
 
 Translated skill instructions, concise-note guidance, reference guides, and the

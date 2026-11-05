@@ -102,6 +102,7 @@ fn skills_are_listed_with_descriptions_outside_the_checkout() {
         [
             "notion-page",
             "basic-make-notes",
+            "turkish-writing",
             "writing",
             "drawing",
             "showcase",
@@ -127,6 +128,10 @@ fn skill_commands_print_complete_documents_outside_the_checkout() {
         (
             "basic-make-notes",
             include_str!("../skill/basic-make-notes.md"),
+        ),
+        (
+            "turkish-writing",
+            include_str!("../skill/notion-page/references/turkish-writing.md"),
         ),
         (
             "writing",

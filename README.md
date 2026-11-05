@@ -70,13 +70,17 @@ not required.
 ```sh
 notion-page --skill
 notion-page --skill basic-make-notes
+notion-page --skill turkish-writing
 notion-page --skill writing
 ```
 
 `basic-make-notes` keeps notes understandable without the conversation and
 concise without losing meaning.
 
-[Markdown guide](skill/notion-page/references/writing.md) · [Python API](skill/notion-page/references/reader.md)
+`turkish-writing` explains Turkish sentence structure, natural phrasing,
+technical terminology, and spelling, drawing on the earlier Oku research.
+
+[Markdown guide](skill/notion-page/references/writing.md) · [Türkçe yazım rehberi](skill/notion-page/references/turkish-writing.md) · [Python API](skill/notion-page/references/reader.md)
 
 <details>
 <summary>Ajanlara ekleme</summary>

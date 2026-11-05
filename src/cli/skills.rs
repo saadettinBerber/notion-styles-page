@@ -10,6 +10,8 @@ pub(super) enum Skill {
         help = "Write concise notes that make sense without the conversation and preserve their meaning."
     )]
     BasicMakeNotes,
+    #[value(help = "Write natural Turkish notes with consistent terminology and correct spelling.")]
+    TurkishWriting,
     #[value(
         alias = "yazim",
         help = "Explain frontmatter, Markdown syntax, and custom blocks."
@@ -38,6 +40,9 @@ impl Skill {
             }
             Self::NotionPage => include_str!("../../skill/notion-page/SKILL.md"),
             Self::BasicMakeNotes => include_str!("../../skill/basic-make-notes.md"),
+            Self::TurkishWriting => {
+                include_str!("../../skill/notion-page/references/turkish-writing.md")
+            }
             Self::Writing => notion_sayfa::writing_guide(),
             Self::Drawing => include_str!("../../skill/notion-page/references/drawing.md"),
             Self::Showcase => include_str!("../../skill/notion-page/templates/showcase.md"),

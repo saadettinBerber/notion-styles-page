@@ -9,6 +9,8 @@ description: Convert Markdown notes into a standalone, offline Notion-style HTML
 
 - Apply [basic-make-notes](../basic-make-notes.md) when writing or shortening notes. Preserve the user's meaning, examples, and order; clarify missing information that affects the result.
 
+- When writing in Turkish, also follow the [Turkish writing guide](references/turkish-writing.md) for natural phrasing, terminology, and spelling.
+
 - Start Markdown with YAML frontmatter containing `title`. Follow the [writing guide](references/writing.md); consult the [showcase](templates/showcase.md) for supported blocks and the [drawing guide](references/drawing.md) for inline SVG.
 
 - Run `notion-page notes.md`, or `notion-page notes/*.md --output pages`. Fix any reported errors before sharing the output.
@@ -21,7 +23,7 @@ description: Convert Markdown notes into a standalone, offline Notion-style HTML
 
 **Read embedded guides without a source checkout.**
 
-`notion-page --skill` lists guides. Use `notion-page --skill NAME` to read `notion-page`, `basic-make-notes`, `writing`, `drawing`, `showcase`, or `reader`.
+`notion-page --skill` lists guides. Use `notion-page --skill NAME` to read `notion-page`, `basic-make-notes`, `turkish-writing`, `writing`, `drawing`, `showcase`, or `reader`.
 
 ## Output options
 
