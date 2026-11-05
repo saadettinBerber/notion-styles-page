@@ -140,3 +140,34 @@ All 60 Rust tests passed. The CLI tests cover byte-for-byte restoration, failed 
 ## Initial public snapshot
 
 All 54 Rust tests passed. Rustfmt and Clippy passed for the converter and the Python bindings with Python 3.12. The CLI displayed help and version information, and the showcase HTML matched the previous build byte for byte.
+
+## 2026-11-05 · Generated combined skill
+
+`generate-notion-styles/SKILL.md` now includes the actual writing and conversion
+rules. A Python generator discovers `skill/**/SKILL.md`, reads YAML names and
+descriptions, and optionally expands a guide through `metadata.source`. No skill
+list needs maintenance. The output excludes itself, has deterministic ordering,
+and supports a non-writing freshness check. Relative document links become
+repository URLs for copied installations; code examples remain unchanged.
+
+The GitHub Actions workflow validates PRs with read-only permissions. On branch
+pushes or manual runs, a separate job regenerates from the latest branch tip and
+commits only changed output, preserving the source commit's author. It does not
+force-push or bypass branch rules. README documents metadata, local generation,
+and installation updates.
+
+Verification: all 71 baseline and final Rust tests passed, as did Rustfmt and
+all-target Clippy with warnings denied. Ten Python tests passed for discovery,
+add/update/delete behavior, metadata validation and sources, output exclusion,
+idempotence, stale checks, portable links, and preserving output on input errors.
+Skill metadata validation, actionlint 1.7.12, and `git diff --check` passed.
+The workflow's exact commit/push shell step was also executed against a temporary
+local bare remote: new and deleted skills reached the generated remote file,
+only that file was committed, the author was preserved, and a repeated run made
+no commit. No GitHub-hosted run or remote publication was performed in this task.
+
+Publication note: GitHub rejected the initial push because the OAuth session
+lacked `workflow` scope. At the user's request, authentication renewal was
+stopped. The workflow file is retained locally and excluded from the published
+commit; the generator, tests, and generated skill are included. README identifies
+automation as pending publication.

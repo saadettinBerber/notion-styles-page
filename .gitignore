@@ -6,3 +6,5 @@ dist/
 /target/
 /docs/readme-hero/.hyperframes/
 /docs/readme-hero/.thumbnails/
+
+/.venv/

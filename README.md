@@ -78,10 +78,11 @@ notion-page --skill writing
 `basic-make-notes` keeps notes understandable without the conversation and
 concise without losing meaning.
 
-`generate-notion-styles` lists guides with `notion-page --skill`, selects them
-by name and description, then reads the relevant guides. `basic-make-notes`
-also links to `readable-instructions` for procedural notes. Each guide keeps
-its own rules in one source file.
+`generate-notion-styles` includes the writing and conversion rules directly.
+Its `SKILL.md` is generated from the skills under `skill/`, using each skill's
+`name`, `description`, and body. Descriptions preserve scope: procedural rules
+apply to instructions and Turkish writing rules apply to Turkish content.
+Each guide keeps its rules in one maintained source file.
 
 `turkish-writing` explains Turkish sentence structure, natural phrasing,
 technical terminology, and spelling, drawing on the earlier Oku research.
@@ -124,3 +125,51 @@ with one of these names. All entries read their guide through the installed CLI.
 | `turkish-writing` | `$turkish-writing` | `/turkish-writing` |
 
 </details>
+
+## Maintaining the combined skill
+
+Add a folder containing `SKILL.md` anywhere under `skill/`. Give it YAML
+frontmatter with `name` and `description`, followed by its instructions:
+
+```markdown
+---
+name: example-guide
+description: Explain when these instructions apply.
+---
+
+Write the rules here.
+```
+
+The generator discovers skills automatically; no list or workflow edit is needed.
+It excludes `skill/generate-notion-styles/`, sorts sections by name, and rejects
+missing metadata or duplicate names. If a skill delegates to an existing guide,
+set `metadata.source` to that file's path relative to the skill's directory:
+
+```yaml
+metadata:
+  source: ../basic-make-notes.md
+```
+
+That guide's body replaces the delegating body in the combined output. The source
+must stay under `skill/`. Its optional frontmatter is removed. Descriptions come
+from the discoverable `SKILL.md`; ordinary relative Markdown links become GitHub
+links so the installed combined skill can still reach supporting documents.
+Adding a skill here does not register a new `notion-page --skill` CLI command.
+
+Generate or check locally with Python 3.10+:
+
+```sh
+python3 -m venv .venv
+.venv/bin/python -m pip install -r scripts/requirements.txt
+.venv/bin/python scripts/generate_skill.py
+.venv/bin/python scripts/generate_skill.py --check
+.venv/bin/python -m unittest discover -s scripts -p 'test_*.py' -v
+```
+
+Edit source skills or `scripts/generate-skill.template.md`, then regenerate;
+do not hand-edit the generated `SKILL.md`. `--check` reports stale output without
+writing. Existing agent installations need to be updated to receive changes.
+
+GitHub Actions automation is pending publication. The workflow was tested
+locally but could not be pushed because the current GitHub session lacks the
+`workflow` scope. Use the local generation commands above until it is published.
