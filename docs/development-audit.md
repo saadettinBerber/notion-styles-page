@@ -1,5 +1,29 @@
 # Development verification
 
+## 2026-11-05 · Minimal agent skill
+
+Added a short English `generate-notion-styles` skill with shared relative links
+under `.agents/skills` for Codex and `.claude/skills` for Claude Code. It reads
+CLI help, concise-note guidance, and Markdown syntax from the installed CLI.
+The README's collapsible “Ajanlara ekleme” section uses agent-specific
+`npx skills add` commands for Codex and Claude Code, with `--global --copy`
+for user-wide installation without symlinks on macOS, Linux, and Windows.
+It documents the Node.js/Git prerequisites, project scope, and invocation.
+
+Verification: skill metadata validation, both relative links, README shell
+syntax, Rustfmt, Clippy with warnings denied, all 70 Rust tests, and
+`git diff --check` passed. The installed CLI provided help and both guides and
+converted a Markdown note outside the checkout.
+The Skills CLI's own documentation and supported-agent list confirm the new
+installation flags. Installed official Node.js v26.13.0 LTS (Apple Silicon),
+with npm/npx 11.20.0, after verifying the archive's SHA-256. The binaries are
+available through `~/.local/bin`; npm's user prefix is `~/.local`.
+Skills CLI 1.7.6 discovered the skill in the checkout and installed it with
+`--copy` for both Codex and Claude Code in temporary projects. Both installed
+files exactly matched the source. These checks used the local source and
+project scope. README shell syntax,
+Rustfmt, Clippy, and all 70 tests passed after the documentation update.
+
 ## 2026-11-05 · Selectable reading typography and CLI cleanup
 
 Three subagents reviewed the Rust, CLI, and Python boundaries. A shared

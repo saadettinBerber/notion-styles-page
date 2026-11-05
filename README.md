@@ -79,15 +79,29 @@ concise without losing meaning.
 [Markdown guide](skill/notion-sayfa/references/yazim.md) · [Python API](skill/notion-sayfa/references/okuyucu.md)
 
 <details>
-<summary>Claude Code</summary>
+<summary>Ajanlara ekleme</summary>
 
-Link the skill from the checkout.
+Install `notion-page` first. With Node.js 22.20+ and Git installed, use the
+[Skills CLI](https://github.com/vercel-labs/skills/blob/main/docs/commands.md)
+in your terminal on macOS, Linux, or Windows:
+
+**[Codex](https://learn.chatgpt.com/docs/build-skills)**
 
 ```sh
-mkdir -p "$HOME/.claude/skills"
-ln -s "$PWD/skill/notion-sayfa" "$HOME/.claude/skills/notion-page"
+npx skills add saadettinBerber/notion-styles-page --skill generate-notion-styles --agent codex --global --copy
 ```
 
-`/notion-page`
+`$generate-notion-styles Turn these notes into a page.`
+
+**[Claude Code](https://code.claude.com/docs/en/skills)**
+
+```sh
+npx skills add saadettinBerber/notion-styles-page --skill generate-notion-styles --agent claude-code --global --copy
+```
+
+`/generate-notion-styles Turn these notes into a page.`
+
+These commands copy the skill into each agent's user directory. Omit `--global`
+to install only in the current project.
 
 </details>
