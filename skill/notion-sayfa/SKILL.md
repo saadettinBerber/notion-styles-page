@@ -25,6 +25,12 @@ repo_root="$(cd -P "$SKILL" && cd ../.. && pwd)" && cargo install --locked --pat
 
 Sayfanın anlatımı, örnekleri ve sırası kullanıcıdan gelir. Sen onu bu kalıba döker, biçimi düzeltirsin. İstenmemiş bölüm, açıklama ya da süs bloğu ekleme. Bir yer eksik ya da belirsizse sor.
 
+Not oluştururken veya kısaltırken [../basic-make-notes.md](../basic-make-notes.md) rehberini uygula: sohbeti hatırlamayı gerektirmeyen, anlam kaybı olmadan öz notlar yaz.
+
+## Rehberleri terminalden oku
+
+`notion-page --skill` rehberleri birer cümleyle listeler. `notion-page --skill basic-make-notes` seçilen rehberin tamamını gösterir; kaynak klasörü gerekmez. Diğer adlar: `notion-page` bu skill, `yazim` Markdown kuralları, `cizim` SVG kuralları, `vitrin` örnek sayfa, `okuyucu` belge API'si. Yerel bağlantılar açılamıyorsa ilgili rehberi bu komutla oku.
+
 ## Akış
 
 1. **Sayfayı yaz.** Her dosya `---` satırları arasında `title` ya da `baslik` içeren bir başlık bloğuyla başlar. Bütün yazım kuralları [references/yazim.md](references/yazim.md) içindedir. Bütün blokların canlı örneği [templates/vitrin.md](templates/vitrin.md) dosyasıdır: emin olmadığında ona bak, yeni bir sayfaya onu kopyalayarak da başlayabilirsin.

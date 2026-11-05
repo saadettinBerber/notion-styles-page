@@ -1,5 +1,6 @@
 mod archive;
 mod build;
+mod skills;
 
 use std::path::PathBuf;
 use std::process::ExitCode;
@@ -12,6 +13,8 @@ Examples
   notion-page notes/*.md --output pages
   notion-page --archive notes.md
   notion-page --restore notes.html
+  notion-page --skill
+  notion-page --skill basic-make-notes
 
 Exit Codes
   0  Success
@@ -27,7 +30,10 @@ Exit Codes
 )]
 struct Args {
     /// Markdown files to convert, or HTML archives to restore
-    #[arg(required = true, value_name = "FILES")]
+    #[arg(
+        required_unless_present_any = ["skills", "skill"],
+        value_name = "FILES"
+    )]
     sources: Vec<PathBuf>,
 
     /// Write output to this directory (default: next to each source file)
@@ -41,10 +47,36 @@ struct Args {
     /// Recover the original Markdown from an HTML archive
     #[arg(long)]
     restore: bool,
+
+    /// List the embedded skills and guides
+    #[arg(
+        long,
+        conflicts_with_all = ["skill", "sources", "output_dir", "archive", "restore"]
+    )]
+    skills: bool,
+
+    /// List skills and guides, or print one by name for an AI agent
+    #[arg(
+        long,
+        value_name = "NAME",
+        value_enum,
+        num_args = 0..=1,
+        default_missing_value = "list",
+        conflicts_with_all = ["sources", "output_dir", "archive", "restore"]
+    )]
+    skill: Option<skills::Skill>,
 }
 
 pub(crate) fn run() -> ExitCode {
     let args = Args::parse();
+    if args.skills {
+        skills::print_list();
+        return ExitCode::SUCCESS;
+    }
+    if let Some(skill) = args.skill {
+        skill.print();
+        return ExitCode::SUCCESS;
+    }
     let mode = if args.archive {
         build::Mode::Archive
     } else if args.restore {
