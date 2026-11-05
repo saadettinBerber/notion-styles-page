@@ -2,6 +2,11 @@
 
 Follow [SKILL.md](skill/notion-sayfa/SKILL.md) when using the skill. Use this guide when maintaining the converter or skill docs.
 
+## Git
+
+- Branches use `<type>/<short-description>` (e.g. `feat/concise-notes`); never `codex/`.
+- Commit subjects follow Conventional Commits: `<type>(<scope>): <summary>` (scope optional).
+
 ## Code
 
 - CLI parsing lives in `src/cli/mod.rs` and file handling in `src/cli/build.rs`. The library prepares documents and renders HTML.
