@@ -23,7 +23,7 @@ description: Convert Markdown notes into a standalone, offline Notion-style HTML
 
 **Read embedded guides without a source checkout.**
 
-`notion-page --skill` lists guides. Use `notion-page --skill NAME` to read `notion-page`, `basic-make-notes`, `turkish-writing`, `writing`, `drawing`, `showcase`, or `reader`.
+`notion-page --skill` lists guides. Use `notion-page --skill NAME` to read `notion-page`, `basic-make-notes`, `readable-instructions`, `turkish-writing`, `writing`, `drawing`, `showcase`, or `reader`.
 
 ## Output options
 

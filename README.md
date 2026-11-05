@@ -70,12 +70,18 @@ not required.
 ```sh
 notion-page --skill
 notion-page --skill basic-make-notes
+notion-page --skill readable-instructions
 notion-page --skill turkish-writing
 notion-page --skill writing
 ```
 
 `basic-make-notes` keeps notes understandable without the conversation and
 concise without losing meaning.
+
+`generate-notion-styles` lists guides with `notion-page --skill`, selects them
+by name and description, then reads the relevant guides. `basic-make-notes`
+also links to `readable-instructions` for procedural notes. Each guide keeps
+its own rules in one source file.
 
 `turkish-writing` explains Turkish sentence structure, natural phrasing,
 technical terminology, and spelling, drawing on the earlier Oku research.
@@ -107,5 +113,14 @@ npx skills add saadettinBerber/notion-styles-page --skill generate-notion-styles
 
 These commands copy the skill into each agent's user directory. Omit `--global`
 to install only in the current project.
+
+For a standalone skill, replace `generate-notion-styles` in the install command
+with one of these names. All entries read their guide through the installed CLI.
+
+| Skill | Codex invocation | Claude Code invocation |
+|---|---|---|
+| `basic-make-notes` | `$basic-make-notes` | `/basic-make-notes` |
+| `readable-instructions` | `$readable-instructions` | `/readable-instructions` |
+| `turkish-writing` | `$turkish-writing` | `/turkish-writing` |
 
 </details>

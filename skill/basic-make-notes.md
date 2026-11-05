@@ -19,6 +19,8 @@ description: Write concise notes that make sense without the conversation and pr
 
 - Use headings and lists when they help. Let the required context determine the length.
 
+For instructions, checklists, or procedural notes, also follow [readable-instructions](readable-instructions.md) (`notion-page --skill readable-instructions`).
+
 Check that the note makes sense without the conversation, then remove words that do not change its meaning.
 
 **Example:** If automatic refresh slowed the order page, write “Automatic refresh on the order page was disabled because it slowed the page” instead of “We disabled it.”

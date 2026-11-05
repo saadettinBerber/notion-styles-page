@@ -102,6 +102,7 @@ fn skills_are_listed_with_descriptions_outside_the_checkout() {
         [
             "notion-page",
             "basic-make-notes",
+            "readable-instructions",
             "turkish-writing",
             "writing",
             "drawing",
@@ -110,7 +111,11 @@ fn skills_are_listed_with_descriptions_outside_the_checkout() {
         ]
     );
     assert_eq!(
-        entries[1].1,
+        entries
+            .iter()
+            .find(|(name, _)| *name == "basic-make-notes")
+            .unwrap()
+            .1,
         "Write concise notes that make sense without the conversation and preserve their meaning."
     );
     for arguments in [&["--skill", "list"][..], &["--skills"][..]] {
@@ -128,6 +133,10 @@ fn skill_commands_print_complete_documents_outside_the_checkout() {
         (
             "basic-make-notes",
             include_str!("../skill/basic-make-notes.md"),
+        ),
+        (
+            "readable-instructions",
+            include_str!("../skill/readable-instructions.md"),
         ),
         (
             "turkish-writing",

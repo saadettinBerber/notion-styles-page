@@ -10,6 +10,8 @@ pub(super) enum Skill {
         help = "Write concise notes that make sense without the conversation and preserve their meaning."
     )]
     BasicMakeNotes,
+    #[value(help = "Write scannable Markdown instructions, checklists, and procedures.")]
+    ReadableInstructions,
     #[value(help = "Write natural Turkish notes with consistent terminology and correct spelling.")]
     TurkishWriting,
     #[value(
@@ -40,6 +42,7 @@ impl Skill {
             }
             Self::NotionPage => include_str!("../../skill/notion-page/SKILL.md"),
             Self::BasicMakeNotes => include_str!("../../skill/basic-make-notes.md"),
+            Self::ReadableInstructions => include_str!("../../skill/readable-instructions.md"),
             Self::TurkishWriting => {
                 include_str!("../../skill/notion-page/references/turkish-writing.md")
             }

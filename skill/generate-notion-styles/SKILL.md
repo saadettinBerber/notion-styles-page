@@ -3,14 +3,6 @@ name: generate-notion-styles
 description: Turn supplied content into Notion-style HTML using the notion-page CLI.
 ---
 
-**Generate a Notion-style page with the CLI.**
-
-- Read `notion-page --help`.
-
-- Follow `notion-page --skill basic-make-notes` and `notion-page --skill writing`.
-
-- When writing in Turkish, also follow `notion-page --skill turkish-writing`.
-
-- Prepare the user's content as Markdown.
-
-- Run `notion-page notes.md`; check the HTML in a browser and share it.
+Read `notion-page --help` and `notion-page --skill`.
+Select relevant guides by name and description, then read them with `notion-page --skill NAME`.
+Follow those guides to prepare Markdown, generate the HTML, and check it in a browser.

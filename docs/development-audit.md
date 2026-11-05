@@ -1,5 +1,23 @@
 # Development verification
 
+## 2026-11-05 · Guide discovery and standalone skills
+
+The generation skill lists available guides with `notion-page --skill`, selects
+them by name and description, and reads the relevant documents. Guide discovery
+uses the CLI catalogue. `basic-make-notes` links procedural notes to
+`readable-instructions`. Added short standalone entries for `basic-make-notes`,
+`readable-instructions`, and `turkish-writing`, with shared Codex/Claude links.
+Each entry reads its original guide through the CLI; rules remain in their
+existing files. The CLI embeds `readable-instructions` using the existing
+registration structure.
+
+Verification: all 71 Rust tests, Rustfmt, and all-target Clippy with warnings
+denied passed. Skill metadata, agent links, and README shell syntax passed
+validation. Reinstalled the CLI and copied all four entries into temporary
+Codex and Claude Code projects. Each standalone entry returned its exact source
+guide; CLI discovery listed names and descriptions for all eight guides, and
+every listed guide was readable outside the checkout.
+
 ## 2026-11-05 · Turkish writing guide
 
 Added `turkish-writing` for Turkish sentence structure, natural phrasing,
@@ -15,6 +33,12 @@ in the four edited Markdown documents passed. Metadata validation used a
 temporary Python environment with PyYAML. Reinstalled the CLI and verified its
 guide listing and byte-for-byte Turkish/main guide output outside the checkout,
 without creating files. Extended the existing CLI discovery/document tests.
+
+## 2026-11-05 · Readable instructions reference
+
+Added `skill/readable-instructions.md` as a verbatim English copy of the existing
+skill. Source comparison, skill metadata validation, Rustfmt, Clippy with
+warnings denied, and all 71 Rust tests passed.
 
 ## 2026-11-05 · English skill guides and paths
 
