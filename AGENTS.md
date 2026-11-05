@@ -32,7 +32,7 @@ cargo fmt --check --manifest-path bindings/python/Cargo.toml
 PYO3_PYTHON=python cargo clippy --locked --manifest-path bindings/python/Cargo.toml --all-targets -- -D warnings
 ```
 
-Record verification in [docs/development-audit.md](docs/development-audit.md).
+Record verification results in the commit or pull request description.
 
 When editing source skills or `scripts/generate-skill.template.md`, regenerate
 the combined skill with `cargo run --locked --example generate-skill`. Verify
