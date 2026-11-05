@@ -53,6 +53,9 @@ fn help_and_missing_input_have_distinct_exit_codes() {
     let help_text = str::from_utf8(&help.stdout).unwrap();
     assert!(help_text.contains("Usage: notion-page"));
     assert!(help_text.contains("--output"));
+    assert!(help_text.contains("--skills"));
+    assert!(help_text.contains("--skill [<NAME>]"));
+    assert!(help_text.contains("List skills and guides"));
     assert!(help_text.contains("Markdown files to convert"));
     assert!(help_text.contains("\nExamples\n  notion-page notes.md"));
     assert!(help_text.contains("notion-page notes/*.md --output pages"));
@@ -72,6 +75,121 @@ fn version_reports_the_cargo_package_version() {
         &result,
         concat!("notion-page ", env!("CARGO_PKG_VERSION"), "\n"),
     );
+}
+
+#[test]
+fn skills_are_listed_with_descriptions_outside_the_checkout() {
+    let workspace = tempdir().unwrap();
+    let result = run(workspace.path(), &["--skill"]);
+
+    assert_eq!(result.status.code(), Some(0));
+    assert!(result.stderr.is_empty());
+    let listing = str::from_utf8(&result.stdout).unwrap();
+    let entries: Vec<_> = listing
+        .lines()
+        .map(|line| {
+            let (name, description) = line.split_once('\t').unwrap();
+            assert!(!description.is_empty());
+            assert!(description.ends_with('.'));
+            (name, description)
+        })
+        .collect();
+    assert_eq!(
+        entries.iter().map(|(name, _)| *name).collect::<Vec<_>>(),
+        [
+            "notion-page",
+            "basic-make-notes",
+            "yazim",
+            "cizim",
+            "vitrin",
+            "okuyucu"
+        ]
+    );
+    assert_eq!(
+        entries[1].1,
+        "Sohbeti hatırlamadan anlaşılabilen, anlam kaybı olmadan öz notlar yazar."
+    );
+    for arguments in [&["--skill", "list"][..], &["--skills"][..]] {
+        assert_success(&run(workspace.path(), arguments), listing);
+    }
+    assert!(fs::read_dir(workspace.path()).unwrap().next().is_none());
+}
+
+#[test]
+fn skill_commands_print_complete_documents_outside_the_checkout() {
+    let workspace = tempdir().unwrap();
+
+    for (name, expected) in [
+        (
+            "notion-page",
+            include_str!("../skill/notion-sayfa/SKILL.md"),
+        ),
+        (
+            "basic-make-notes",
+            include_str!("../skill/basic-make-notes.md"),
+        ),
+        (
+            "yazim",
+            include_str!("../skill/notion-sayfa/references/yazim.md"),
+        ),
+        (
+            "cizim",
+            include_str!("../skill/notion-sayfa/references/cizim.md"),
+        ),
+        (
+            "vitrin",
+            include_str!("../skill/notion-sayfa/templates/vitrin.md"),
+        ),
+        (
+            "okuyucu",
+            include_str!("../skill/notion-sayfa/references/okuyucu.md"),
+        ),
+    ] {
+        assert_success(&run(workspace.path(), &["--skill", name]), expected);
+    }
+    assert!(fs::read_dir(workspace.path()).unwrap().next().is_none());
+}
+
+#[test]
+fn skill_commands_reject_unknown_names_and_conversion_arguments() {
+    let workspace = tempdir().unwrap();
+
+    for arguments in [
+        &["--skill", "unknown"][..],
+        &["--skill", "notion-page", "notes.md"],
+        &["--skill", "--output", "pages"],
+        &["--skill", "--archive"],
+        &["--skill", "--restore"],
+        &["--skill", "--skills"],
+        &["--skills", "notes.md"],
+        &["--skills", "--output", "pages"],
+        &["--skills", "--archive"],
+        &["--skills", "--restore"],
+    ] {
+        let result = run(workspace.path(), arguments);
+        assert_eq!(result.status.code(), Some(2), "{arguments:?}");
+        assert!(result.stdout.is_empty(), "{arguments:?}");
+        assert!(!result.stderr.is_empty(), "{arguments:?}");
+    }
+    assert!(fs::read_dir(workspace.path()).unwrap().next().is_none());
+}
+
+#[test]
+fn legacy_binary_exposes_the_same_skill_commands() {
+    let workspace = tempdir().unwrap();
+
+    for arguments in [&["--skill"][..], &["--skill", "basic-make-notes"]] {
+        let result = run(workspace.path(), arguments);
+        let legacy = Command::new(env!("CARGO_BIN_EXE_uret"))
+            .args(arguments)
+            .current_dir(workspace.path())
+            .output()
+            .unwrap();
+
+        assert_eq!(legacy.status.code(), result.status.code());
+        assert_eq!(legacy.stdout, result.stdout);
+        assert_eq!(legacy.stderr, result.stderr);
+    }
 }
 
 #[test]

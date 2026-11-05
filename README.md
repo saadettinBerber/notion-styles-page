@@ -48,6 +48,19 @@ notion-page --help
 notion-page --version
 ```
 
+Agents can discover the embedded skills and guides, then read one by name.
+Each list entry includes a one-sentence description. The source checkout is
+not required.
+
+```sh
+notion-page --skill
+notion-page --skill basic-make-notes
+notion-page --skill yazim
+```
+
+`basic-make-notes` keeps notes understandable without the conversation and
+concise without losing meaning.
+
 [Markdown guide](skill/notion-sayfa/references/yazim.md) · [Python API](skill/notion-sayfa/references/okuyucu.md)
 
 <details>
