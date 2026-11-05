@@ -32,6 +32,11 @@ PYO3_PYTHON=python cargo clippy --locked --manifest-path bindings/python/Cargo.t
 
 Record verification in [docs/development-audit.md](docs/development-audit.md).
 
+When editing source skills or `scripts/generate-skill.template.md`, regenerate
+the combined skill with `cargo run --locked --example generate-skill`. Verify
+freshness with `cargo run --locked --example generate-skill -- --check`.
+`cargo test --locked` includes the generator tests.
+
 ## Showcase
 
 - When adding a block or syntax, update the [writing guide](skill/notion-page/references/writing.md) and [showcase](skill/notion-page/templates/showcase.md) in the same commit.

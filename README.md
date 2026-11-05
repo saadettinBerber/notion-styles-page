@@ -157,19 +157,20 @@ from the discoverable `SKILL.md`; ordinary relative Markdown links become GitHub
 links so the installed combined skill can still reach supporting documents.
 Adding a skill here does not register a new `notion-page --skill` CLI command.
 
-Generate or check locally with Python 3.10+:
+Generate or check locally with Cargo:
 
 ```sh
-python3 -m venv .venv
-.venv/bin/python -m pip install -r scripts/requirements.txt
-.venv/bin/python scripts/generate_skill.py
-.venv/bin/python scripts/generate_skill.py --check
-.venv/bin/python -m unittest discover -s scripts -p 'test_*.py' -v
+cargo run --locked --example generate-skill
+cargo run --locked --example generate-skill -- --check
+cargo test --locked
 ```
 
 Edit source skills or `scripts/generate-skill.template.md`, then regenerate;
 do not hand-edit the generated `SKILL.md`. `--check` reports stale output without
 writing. Existing agent installations need to be updated to receive changes.
+
+The generator is a development-only Cargo example. It uses the repository's
+existing Rust dependencies and does not require Python or install another CLI.
 
 GitHub Actions automation is pending publication. The workflow was tested
 locally but could not be pushed because the current GitHub session lacks the

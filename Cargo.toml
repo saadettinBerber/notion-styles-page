@@ -9,6 +9,11 @@ default-run = "notion-page"
 name = "notion-page"
 path = "src/main.rs"
 
+[[example]]
+name = "generate-skill"
+path = "scripts/generate_skill.rs"
+test = true
+
 [dependencies]
 base64 = "0.22"
 clap = { version = "4", features = ["derive"] }

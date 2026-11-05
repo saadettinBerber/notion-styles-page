@@ -171,3 +171,28 @@ lacked `workflow` scope. At the user's request, authentication renewal was
 stopped. The workflow file is retained locally and excluded from the published
 commit; the generator, tests, and generated skill are included. README identifies
 automation as pending publication.
+
+## 2026-11-05 · Rust combined-skill generator
+
+Replaced the Python generator and its tests with a development-only Rust Cargo
+example, `generate-skill`. It reuses the existing dependencies; no dependency
+or lockfile changes were needed. Removed the generator's PyYAML requirements
+file and replaced README maintenance commands with Cargo commands. The example
+is not installed alongside `notion-page`. The optional Python bindings remain
+separate.
+
+The generator retains automatic recursive discovery, metadata-source expansion,
+name ordering, output exclusion, portable links, preserved code examples,
+idempotent writes, and the non-writing `--check` mode. Sixteen Rust tests cover
+the former Python contracts plus name ordering, URL encoding, line-ending
+normalization, and symlinks that escape the source or repository roots. These
+tests run with the regular `cargo test --locked` command.
+
+Verification: all 71 Rust baseline tests and the 10 Python baseline generator
+tests passed before migration. Rustfmt, all-target Clippy with warnings denied,
+all 87 final Rust tests, generation, freshness checks, and `git diff --check`
+passed. The new generated skill matched the old Python generator byte for byte
+using the updated template. Compared with the previous checked-in output, only
+the generator-path comment changed. Cargo metadata confirms that the installed
+binary target remains `notion-page` alone. No Python binding or page-rendering
+code changed.
