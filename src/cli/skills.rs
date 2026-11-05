@@ -2,22 +2,31 @@ use clap::ValueEnum;
 
 #[derive(Clone, Copy, ValueEnum)]
 pub(super) enum Skill {
-    #[value(help = "Kullanılabilir skill ve rehberleri açıklamalarıyla listeler.")]
+    #[value(help = "List available skills and guides with descriptions.")]
     List,
-    #[value(help = "Markdown notlarını Notion görünümlü, tek dosyalık HTML sayfasına dönüştürür.")]
+    #[value(help = "Convert Markdown notes into standalone Notion-style HTML.")]
     NotionPage,
-    #[value(help = "Sohbeti hatırlamadan anlaşılabilen, anlam kaybı olmadan öz notlar yazar.")]
+    #[value(
+        help = "Write concise notes that make sense without the conversation and preserve their meaning."
+    )]
     BasicMakeNotes,
     #[value(
-        help = "Sayfa başlıklarının, Markdown sözdiziminin ve özel blokların yazımını açıklar."
+        alias = "yazim",
+        help = "Explain frontmatter, Markdown syntax, and custom blocks."
     )]
-    Yazim,
-    #[value(help = "Sayfaya gömülü SVG çizimlerin nasıl hazırlanacağını açıklar.")]
-    Cizim,
-    #[value(help = "Desteklenen blokları örnek bir Markdown sayfasında gösterir.")]
-    Vitrin,
-    #[value(help = "Rust ve Python API sözleşmelerini ve kullanımını açıklar.")]
-    Okuyucu,
+    Writing,
+    #[value(alias = "cizim", help = "Explain how to prepare inline SVG drawings.")]
+    Drawing,
+    #[value(
+        alias = "vitrin",
+        help = "Demonstrate supported blocks in a sample Markdown page."
+    )]
+    Showcase,
+    #[value(
+        alias = "okuyucu",
+        help = "Describe the Rust and Python document APIs."
+    )]
+    Reader,
 }
 
 impl Skill {
@@ -27,12 +36,12 @@ impl Skill {
                 print_list();
                 return;
             }
-            Self::NotionPage => include_str!("../../skill/notion-sayfa/SKILL.md"),
+            Self::NotionPage => include_str!("../../skill/notion-page/SKILL.md"),
             Self::BasicMakeNotes => include_str!("../../skill/basic-make-notes.md"),
-            Self::Yazim => notion_sayfa::writing_guide(),
-            Self::Cizim => include_str!("../../skill/notion-sayfa/references/cizim.md"),
-            Self::Vitrin => include_str!("../../skill/notion-sayfa/templates/vitrin.md"),
-            Self::Okuyucu => include_str!("../../skill/notion-sayfa/references/okuyucu.md"),
+            Self::Writing => notion_sayfa::writing_guide(),
+            Self::Drawing => include_str!("../../skill/notion-page/references/drawing.md"),
+            Self::Showcase => include_str!("../../skill/notion-page/templates/showcase.md"),
+            Self::Reader => include_str!("../../skill/notion-page/references/reader.md"),
         };
         print!("{content}");
     }

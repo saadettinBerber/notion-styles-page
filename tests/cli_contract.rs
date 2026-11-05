@@ -19,22 +19,22 @@ Video açıklaması.
 ";
 const SHOWCASE: &str = concat!(
     env!("CARGO_MANIFEST_DIR"),
-    "/skill/notion-sayfa/templates/vitrin.md"
+    "/skill/notion-page/templates/showcase.md"
 );
 const SHOWCASE_MARKUP: &[&str] = &[
     r#"<html lang="tr">"#,
-    r#"<h1 class="page-title">Şablon Vitrini</h1>"#,
+    r#"<h1 class="page-title">Template Showcase</h1>"#,
     r#"class="cover cover-purple""#,
-    r#"class="tag bg-green">şablon</span>"#,
-    r#"<h1 id="başlık-1">Başlık 1</h1>"#,
-    "<mark>Vurgulu metin</mark>",
-    r#"<details class="toggle"><summary>Callout içinde toggle</summary>"#,
+    r#">template</span>"#,
+    r#"<h1 id="heading-1">Heading 1</h1>"#,
+    "<mark>highlighted text</mark>",
+    r#"<details class="toggle"><summary>Toggle inside a callout</summary>"#,
     r#"<details class="toggle toggle-heading">"#,
     r#"<div class="columns">"#,
     r#"<div class="diagram-scroll"><svg"#,
     "<table>",
     r#"<pre><code class="language-python"><span"#,
-    r#"<pre><code class="language-text">:::ornek"#,
+    r#"<pre><code class="language-text">:::example"#,
     r#"class="footnotes""#,
     "@media (prefers-color-scheme: dark)",
 ];
@@ -102,15 +102,15 @@ fn skills_are_listed_with_descriptions_outside_the_checkout() {
         [
             "notion-page",
             "basic-make-notes",
-            "yazim",
-            "cizim",
-            "vitrin",
-            "okuyucu"
+            "writing",
+            "drawing",
+            "showcase",
+            "reader"
         ]
     );
     assert_eq!(
         entries[1].1,
-        "Sohbeti hatırlamadan anlaşılabilen, anlam kaybı olmadan öz notlar yazar."
+        "Write concise notes that make sense without the conversation and preserve their meaning."
     );
     for arguments in [&["--skill", "list"][..], &["--skills"][..]] {
         assert_success(&run(workspace.path(), arguments), listing);
@@ -123,32 +123,48 @@ fn skill_commands_print_complete_documents_outside_the_checkout() {
     let workspace = tempdir().unwrap();
 
     for (name, expected) in [
-        (
-            "notion-page",
-            include_str!("../skill/notion-sayfa/SKILL.md"),
-        ),
+        ("notion-page", include_str!("../skill/notion-page/SKILL.md")),
         (
             "basic-make-notes",
             include_str!("../skill/basic-make-notes.md"),
         ),
         (
-            "yazim",
-            include_str!("../skill/notion-sayfa/references/yazim.md"),
+            "writing",
+            include_str!("../skill/notion-page/references/writing.md"),
         ),
         (
-            "cizim",
-            include_str!("../skill/notion-sayfa/references/cizim.md"),
+            "drawing",
+            include_str!("../skill/notion-page/references/drawing.md"),
         ),
         (
-            "vitrin",
-            include_str!("../skill/notion-sayfa/templates/vitrin.md"),
+            "showcase",
+            include_str!("../skill/notion-page/templates/showcase.md"),
         ),
         (
-            "okuyucu",
-            include_str!("../skill/notion-sayfa/references/okuyucu.md"),
+            "reader",
+            include_str!("../skill/notion-page/references/reader.md"),
         ),
     ] {
         assert_success(&run(workspace.path(), &["--skill", name]), expected);
+    }
+    assert!(fs::read_dir(workspace.path()).unwrap().next().is_none());
+}
+
+#[test]
+fn legacy_guide_names_resolve_to_the_english_documents() {
+    let workspace = tempdir().unwrap();
+
+    for (legacy, current) in [
+        ("yazim", "writing"),
+        ("cizim", "drawing"),
+        ("vitrin", "showcase"),
+        ("okuyucu", "reader"),
+    ] {
+        let expected = run(workspace.path(), &["--skill", current]);
+        let result = run(workspace.path(), &["--skill", legacy]);
+
+        assert_eq!(expected.status.code(), Some(0));
+        assert_success(&result, str::from_utf8(&expected.stdout).unwrap());
     }
     assert!(fs::read_dir(workspace.path()).unwrap().next().is_none());
 }
@@ -355,8 +371,8 @@ fn showcase_renders_documented_blocks_with_bundled_styles() {
 
     let result = run(workspace.path(), &[SHOWCASE, "-o", "cikti"]);
 
-    assert_success(&result, "✓ vitrin.md → vitrin.html\n");
-    let html = fs::read_to_string(workspace.path().join("cikti/vitrin.html")).unwrap();
+    assert_success(&result, "✓ showcase.md → showcase.html\n");
+    let html = fs::read_to_string(workspace.path().join("cikti/showcase.html")).unwrap();
     for markup in SHOWCASE_MARKUP {
         assert!(html.contains(markup), "missing {markup}");
     }

@@ -1,7 +1,7 @@
 # Notion Styles Page
 
 <picture>
-  <source media="(prefers-reduced-motion: reduce)" srcset="docs/vitrin.png">
+  <source media="(prefers-reduced-motion: reduce)" srcset="docs/showcase.png">
   <img src="docs/readme-hero.gif" alt="A Markdown file becomes a Notion-style page with a callout, toggle, checklist, and code block.">
 </picture>
 
@@ -70,13 +70,13 @@ not required.
 ```sh
 notion-page --skill
 notion-page --skill basic-make-notes
-notion-page --skill yazim
+notion-page --skill writing
 ```
 
 `basic-make-notes` keeps notes understandable without the conversation and
 concise without losing meaning.
 
-[Markdown guide](skill/notion-sayfa/references/yazim.md) · [Python API](skill/notion-sayfa/references/okuyucu.md)
+[Markdown guide](skill/notion-page/references/writing.md) · [Python API](skill/notion-page/references/reader.md)
 
 <details>
 <summary>Ajanlara ekleme</summary>

@@ -1,19 +1,24 @@
 ---
 name: basic-make-notes
-description: Sohbeti hatırlamadan anlaşılabilen, anlam kaybı olmadan öz notlar yazar.
+description: Write concise notes that make sense without the conversation and preserve their meaning.
 ---
 
-# Öz ve bağımsız notlar
+# Concise, self-contained notes
 
-Not oluştururken veya kısaltırken, okurun günler sonra sohbeti hatırlamayacağını varsay. Gerekli bağlamı en az kelimeyle aktar.
+**Keep the context readers need in as few words as possible.**
 
-- Konuyu ve yapılan işi adıyla belirt. “Bunu düzelttik”, “önceki yöntem”, “konuştuğumuz gibi” ifadelerini açık karşılıklarıyla değiştir.
-- Ana bilgiyi başa al. Anlamak için gereken amacı, gerekçeyi, sonucu ve varsa sonraki adımı koru; her notu aynı şablona zorlama.
-- Anlamı etkileyen koşulları, sayıları, komutları ve kaynakları kısaltırken kaybetme. Bilinmesi gereken terim ve kısaltmaları ilk kullanımda kısaca açıkla.
-- Zamana bağlı kayıtlarda bilinen tarihi kullan; “dün” veya “geçen gün” gibi belirsiz zamanlardan kaçın. Bilinmeyen tarih, bilgi veya gerekçe uydurma; anlamı etkileyen belirsizliği belirt.
-- Tekrarları, gereksiz girişleri, kapanışları ve örnekleri çıkar. Kısalığı telgraf diline dönüştürme; cümleler doğal ve açık kalsın.
-- Başlık ve maddeleri okumayı kolaylaştırıyorsa kullan. Sabit kelime sınırı koyma; gerekli bağlamı uzunluk uğruna silme.
+- Name the subject and action. Replace phrases such as “we fixed this” or “as discussed” with their explicit meaning.
 
-Son kontrolde sohbeti görmeden notun anlaşıldığından emin ol. Ardından anlamı değiştirmeden çıkarılabilecek sözleri sil.
+- Lead with the main point. Preserve the purpose, reason, result, and next step when needed; let the content determine the structure.
 
-**Örnek:** Sohbette sipariş ekranındaki otomatik yenilemenin sayfayı yavaşlattığı belirtilmişse, “Bunu kapattık.” yerine “Sipariş ekranındaki otomatik yenileme, sayfayı yavaşlattığı için kapatıldı.” yaz.
+- Keep conditions, numbers, commands, and sources that affect meaning. Briefly explain essential terms and abbreviations on first use.
+
+- Use known dates instead of “yesterday” or “the other day.” State meaningful uncertainty; do not invent facts, dates, or reasons.
+
+- Remove repetition and unnecessary introductions, conclusions, and examples. Keep sentences natural and clear.
+
+- Use headings and lists when they help. Let the required context determine the length.
+
+Check that the note makes sense without the conversation, then remove words that do not change its meaning.
+
+**Example:** If automatic refresh slowed the order page, write “Automatic refresh on the order page was disabled because it slowed the page” instead of “We disabled it.”

@@ -44,7 +44,7 @@ pub fn render_shell_with_options(
 }
 
 pub const fn writing_guide() -> &'static str {
-    include_str!("../skill/notion-sayfa/references/yazim.md")
+    include_str!("../skill/notion-page/references/writing.md")
 }
 
 /// A parsed page whose source can be rendered without parsing again.

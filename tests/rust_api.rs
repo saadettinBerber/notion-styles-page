@@ -116,7 +116,7 @@ fn frontmatter_rejects_invalid_font_names_and_types() {
 #[test]
 fn embedded_writing_guide_matches_the_canonical_document() {
     let guide =
-        Path::new(env!("CARGO_MANIFEST_DIR")).join("skill/notion-sayfa/references/yazim.md");
+        Path::new(env!("CARGO_MANIFEST_DIR")).join("skill/notion-page/references/writing.md");
     assert_eq!(writing_guide(), std::fs::read_to_string(guide).unwrap());
 }
 

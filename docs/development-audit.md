@@ -1,5 +1,28 @@
 # Development verification
 
+## 2026-11-05 · English skill guides and paths
+
+Translated skill instructions, concise-note guidance, reference guides, and the
+showcase into English. Renamed `skill/notion-sayfa` to `skill/notion-page`, with
+`writing.md`, `drawing.md`, `reader.md`, and `showcase.md` replacing the Turkish
+guide filenames. Updated embedded paths, agent instructions, README links, and
+the preview image path. Parser field names and Rust API identifiers retain their
+existing contracts.
+
+The CLI now lists English descriptions and the canonical guide names `writing`,
+`drawing`, `showcase`, and `reader`. Legacy names remain accepted as aliases.
+The minimal generation skill uses `--skill writing`.
+
+Verification: all 70 baseline tests passed; Rustfmt, Clippy with warnings denied,
+and all 71 updated Rust tests passed, including legacy guide alias coverage.
+Both skill manifests, local reference links, README shell syntax, and agent
+links passed validation. The reinstalled CLI returned all six complete English
+guides outside the checkout. Skills CLI copied the updated generation skill
+for Codex and Claude Code in temporary projects. Chromium checked the showcase
+offline in light/dark desktop and 390 px phone layouts, including fonts, page
+width, drawings, and toggles; no script errors or page overflow were found.
+Regenerated `docs/showcase.png` from the English showcase.
+
 ## 2026-11-05 · Minimal agent skill
 
 Added a short English `generate-notion-styles` skill with shared relative links

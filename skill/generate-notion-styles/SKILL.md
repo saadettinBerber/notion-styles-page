@@ -7,7 +7,7 @@ description: Turn supplied content into Notion-style HTML using the notion-page 
 
 - Read `notion-page --help`.
 
-- Follow `notion-page --skill basic-make-notes` and `notion-page --skill yazim`.
+- Follow `notion-page --skill basic-make-notes` and `notion-page --skill writing`.
 
 - Prepare the user's content as Markdown.
 
