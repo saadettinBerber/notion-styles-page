@@ -63,7 +63,8 @@ notion-page --help
 notion-page --version
 ```
 
-Agents can discover the embedded skills and guides, then read one by name.
+Human, AI, and SI (superintelligence) agents can discover the embedded skills
+and guides, then read one by name.
 Each list entry includes a one-sentence description. The source checkout is
 not required.
 
