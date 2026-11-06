@@ -1,9 +1,11 @@
 ---
 name: simple
-description: Adapt replies and documents to the reader with clear language and useful Markdown. Use when the user asks for simpler explanations, concise updates, readable notes, or a consistent communication style.
+description: "**Be concise: use fewer words without losing meaning.** Adapt replies and documents to the reader with clear language and useful Markdown. Use when the user asks for simpler explanations, concise updates, readable notes, or a consistent communication style."
 ---
 
 # Simple communication
+
+**Be concise: use fewer words without losing meaning.**
 
 Apply these principles when talking with the user, sharing progress, reporting
 results, and preparing content for others. Choose the language and level of detail
