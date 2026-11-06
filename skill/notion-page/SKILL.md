@@ -5,11 +5,11 @@ description: Convert Markdown notes into a standalone, offline Notion-style HTML
 
 **Turn the user's content into a Notion-style page.**
 
-- Read `notion-page --help`. If the CLI is missing, follow the repository's [installation instructions](../../README.md#install).
+- Read `notion-page --help`. If the CLI is missing, follow the repository's [installation instructions](https://github.com/saadettinBerber/notion-styles-page#install).
 
-- Apply [basic-make-notes](../basic-make-notes.md) when writing or shortening notes. Preserve the user's meaning, examples, and order; clarify missing information that affects the result.
+- In user-facing replies, progress updates, and documents, lead with what the reader needs. Explain the reason and useful detail in natural language. Use shared context in conversation and enough context for the intended reader in standalone notes. Preserve meaning, examples, conditions, and uncertainty. Choose paragraphs, lists, or tables to fit the content. Report the result and the scope of verification. For additional examples in a standalone installation, read `notion-page --skill simple`.
 
-- When writing in Turkish, also follow the [Turkish writing guide](references/turkish-writing.md) for natural phrasing, terminology, and spelling.
+- When writing in Turkish, apply the Turkish writing guidance included in the combined skill. For a standalone page conversion, read `notion-page --skill turkish-writing` for natural phrasing, terminology, and spelling.
 
 - Start Markdown with YAML frontmatter containing `title`. Follow the [writing guide](references/writing.md); consult the [showcase](templates/showcase.md) for supported blocks and the [drawing guide](references/drawing.md) for inline SVG.
 
@@ -23,7 +23,7 @@ description: Convert Markdown notes into a standalone, offline Notion-style HTML
 
 **Read embedded guides without a source checkout.**
 
-`notion-page --skill` lists guides. Use `notion-page --skill NAME` to read `notion-page`, `basic-make-notes`, `readable-instructions`, `turkish-writing`, `writing`, `drawing`, `showcase`, or `reader`.
+`notion-page --skill` lists guides. Use `notion-page --skill NAME` to read `notion-page`, `simple`, `turkish-writing`, `writing`, `drawing`, `showcase`, or `reader`. The communication principles are included above and in the combined skill.
 
 ## Output options
 

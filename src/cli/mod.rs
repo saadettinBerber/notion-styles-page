@@ -17,7 +17,7 @@ Examples
   notion-page --archive notes.md
   notion-page --restore notes.html
   notion-page --skill
-  notion-page --skill basic-make-notes
+  notion-page --skill simple
 
 Exit Codes
   0  Success

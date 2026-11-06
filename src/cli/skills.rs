@@ -7,11 +7,12 @@ pub(super) enum Skill {
     #[value(help = "Convert Markdown notes into standalone Notion-style HTML.")]
     NotionPage,
     #[value(
-        help = "Write concise notes that make sense without the conversation and preserve their meaning."
+        alias = "communication",
+        alias = "basic-make-notes",
+        alias = "readable-instructions",
+        help = "Communicate clearly in conversations and documents with context-sensitive Markdown."
     )]
-    BasicMakeNotes,
-    #[value(help = "Write scannable Markdown instructions, checklists, and procedures.")]
-    ReadableInstructions,
+    Simple,
     #[value(help = "Write natural Turkish notes with consistent terminology and correct spelling.")]
     TurkishWriting,
     #[value(
@@ -41,11 +42,8 @@ impl Skill {
                 return;
             }
             Self::NotionPage => include_str!("../../skill/notion-page/SKILL.md"),
-            Self::BasicMakeNotes => include_str!("../../skill/basic-make-notes.md"),
-            Self::ReadableInstructions => include_str!("../../skill/readable-instructions.md"),
-            Self::TurkishWriting => {
-                include_str!("../../skill/notion-page/references/turkish-writing.md")
-            }
+            Self::Simple => include_str!("../../skill/simple/SKILL.md"),
+            Self::TurkishWriting => include_str!("../../skill/turkish-writing/SKILL.md"),
             Self::Writing => notion_sayfa::writing_guide(),
             Self::Drawing => include_str!("../../skill/notion-page/references/drawing.md"),
             Self::Showcase => include_str!("../../skill/notion-page/templates/showcase.md"),

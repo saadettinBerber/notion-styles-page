@@ -101,8 +101,7 @@ fn skills_are_listed_with_descriptions_outside_the_checkout() {
         entries.iter().map(|(name, _)| *name).collect::<Vec<_>>(),
         [
             "notion-page",
-            "basic-make-notes",
-            "readable-instructions",
+            "simple",
             "turkish-writing",
             "writing",
             "drawing",
@@ -113,10 +112,10 @@ fn skills_are_listed_with_descriptions_outside_the_checkout() {
     assert_eq!(
         entries
             .iter()
-            .find(|(name, _)| *name == "basic-make-notes")
+            .find(|(name, _)| *name == "simple")
             .unwrap()
             .1,
-        "Write concise notes that make sense without the conversation and preserve their meaning."
+        "Communicate clearly in conversations and documents with context-sensitive Markdown."
     );
     for arguments in [&["--skill", "list"][..], &["--skills"][..]] {
         assert_success(&run(workspace.path(), arguments), listing);
@@ -130,17 +129,10 @@ fn skill_commands_print_complete_documents_outside_the_checkout() {
 
     for (name, expected) in [
         ("notion-page", include_str!("../skill/notion-page/SKILL.md")),
-        (
-            "basic-make-notes",
-            include_str!("../skill/basic-make-notes.md"),
-        ),
-        (
-            "readable-instructions",
-            include_str!("../skill/readable-instructions.md"),
-        ),
+        ("simple", include_str!("../skill/simple/SKILL.md")),
         (
             "turkish-writing",
-            include_str!("../skill/notion-page/references/turkish-writing.md"),
+            include_str!("../skill/turkish-writing/SKILL.md"),
         ),
         (
             "writing",
@@ -165,10 +157,13 @@ fn skill_commands_print_complete_documents_outside_the_checkout() {
 }
 
 #[test]
-fn legacy_guide_names_resolve_to_the_english_documents() {
+fn legacy_guide_names_resolve_to_the_current_documents() {
     let workspace = tempdir().unwrap();
 
     for (legacy, current) in [
+        ("communication", "simple"),
+        ("basic-make-notes", "simple"),
+        ("readable-instructions", "simple"),
         ("yazim", "writing"),
         ("cizim", "drawing"),
         ("vitrin", "showcase"),

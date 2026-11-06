@@ -64,36 +64,45 @@ notion-page --version
 ```
 
 Human, AI, and SI (superintelligence) agents can discover the embedded skills
-and guides, then read one by name.
-Each list entry includes a one-sentence description. The source checkout is
-not required.
+and guides through the CLI. Each list entry includes a one-sentence description,
+and the guides are available outside the source checkout.
 
 ```sh
 notion-page --skill
-notion-page --skill basic-make-notes
-notion-page --skill readable-instructions
+notion-page --skill simple
 notion-page --skill turkish-writing
 notion-page --skill writing
 ```
 
-`basic-make-notes` keeps notes understandable without the conversation and
-concise without losing meaning.
+The [simple skill](skill/simple/SKILL.md) contains its full instructions. It covers
+conversation, progress updates, explanations, final replies, and standalone notes.
+It gives the model criteria for choosing paragraphs, lists, tables, and emphasis,
+with examples for different reader needs.
 
-`generate-notion-styles` includes the writing and conversion rules directly.
-Its `SKILL.md` is generated from the skills under `skill/`, using each skill's
-`name`, `description`, and body. Descriptions preserve scope: procedural rules
-apply to instructions and Turkish writing rules apply to Turkish content.
-Each guide keeps its rules in one maintained source file.
+`generate-notion-styles` includes these principles and examples directly in its
+body, alongside the conversion and language guides. Loading the skill makes
+the communication guidance available immediately. The installed skills and
+CLI provide the instructions needed for the workflow.
+
+The guides are written in English. The Turkish writing guide includes Turkish
+language examples with English explanations. Follow the user's requested
+language when preparing replies and documents.
+
+The former `communication`, `basic-make-notes`, and `readable-instructions` CLI names are aliases
+for `simple`. Their standalone skill entries have been consolidated into
+the simple skill.
 
 `turkish-writing` explains Turkish sentence structure, natural phrasing,
 technical terminology, and spelling, drawing on the earlier Oku research.
 
-[Markdown guide](skill/notion-page/references/writing.md) · [Türkçe yazım rehberi](skill/notion-page/references/turkish-writing.md) · [Python API](skill/notion-page/references/reader.md)
+[Markdown guide](skill/notion-page/references/writing.md) · [Turkish writing guide](skill/turkish-writing/SKILL.md) · [Python API](skill/notion-page/references/reader.md)
 
 <details>
-<summary>Ajanlara ekleme</summary>
+<summary>Add to agents</summary>
 
-Install `notion-page` first. With Node.js 22.20+ and Git installed, use the
+Install `notion-page` for page conversion and CLI guides. The `simple`
+and `turkish-writing` skills carry their guidance directly. With Node.js 22.20+
+and Git installed, use the
 [Skills CLI](https://github.com/vercel-labs/skills/blob/main/docs/commands.md)
 in your terminal on macOS, Linux, or Windows:
 
@@ -116,18 +125,29 @@ npx skills add saadettinBerber/notion-styles-page --skill generate-notion-styles
 These commands copy the skill into each agent's user directory. Omit `--global`
 to install only in the current project.
 
-For a standalone skill, replace `generate-notion-styles` in the install command
-with one of these names. All entries read their guide through the installed CLI.
+Each skill can be invoked independently. Use its name in the install command
+above. Each `SKILL.md` contains its instructions directly.
 
 | Skill | Codex invocation | Claude Code invocation |
 |---|---|---|
-| `basic-make-notes` | `$basic-make-notes` | `/basic-make-notes` |
-| `readable-instructions` | `$readable-instructions` | `/readable-instructions` |
+| `simple` | `$simple` | `/simple` |
 | `turkish-writing` | `$turkish-writing` | `/turkish-writing` |
+| `notion-page` | `$notion-page` | `/notion-page` |
+| `generate-notion-styles` | `$generate-notion-styles` | `/generate-notion-styles` |
+
+For example, use `/simple Explain the result in plain language` in Claude
+Code or `$simple Explain the result in plain language` in Codex. The CLI
+embeds the same skill files for `notion-page --skill simple` and
+`notion-page --skill turkish-writing`.
 
 </details>
 
 ## Maintaining the combined skill
+
+Edit `skill/simple/SKILL.md` to change the shared communication principles
+and examples. The generator discovers it with the other skills and includes its
+full body in the combined output. Keep the short core principles in the
+standalone `notion-page` entry aligned when changing the philosophy.
 
 Add a folder containing `SKILL.md` anywhere under `skill/`. Give it YAML
 frontmatter with `name` and `description`, followed by its instructions:
@@ -141,21 +161,15 @@ description: Explain when these instructions apply.
 Write the rules here.
 ```
 
-The generator discovers skills automatically; no list or workflow edit is needed.
-It excludes `skill/generate-notion-styles/`, sorts sections by name, and rejects
-missing metadata or duplicate names. If a skill delegates to an existing guide,
-set `metadata.source` to that file's path relative to the skill's directory:
+The generator discovers skills automatically. It excludes
+`skill/generate-notion-styles/`, sorts sections by name, and rejects missing
+metadata or duplicate names. Keep each skill's full instructions in its
+`SKILL.md` so they are available when the skill is loaded.
 
-```yaml
-metadata:
-  source: ../basic-make-notes.md
-```
-
-That guide's body replaces the delegating body in the combined output. The source
-must stay under `skill/`. Its optional frontmatter is removed. Descriptions come
-from the discoverable `SKILL.md`; ordinary relative Markdown links become GitHub
-links so the installed combined skill can still reach supporting documents.
-Adding a skill here does not register a new `notion-page --skill` CLI command.
+The combined output uses each skill's description and body. Ordinary relative
+Markdown links become GitHub links so copied installations can reach supporting
+documents. Register CLI guides separately in `src/cli/skills.rs`, embedding the
+same `SKILL.md` that holds their instructions.
 
 Generate or check locally with Cargo:
 
