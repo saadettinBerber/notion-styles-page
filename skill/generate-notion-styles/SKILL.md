@@ -25,7 +25,7 @@ Source: [skill/notion-page/SKILL.md](https://github.com/saadettinBerber/notion-s
 
 - Read `notion-page --help`. If the CLI is missing, follow the repository's [installation instructions](https://github.com/saadettinBerber/notion-styles-page#install).
 
-- In user-facing replies, progress updates, and documents, lead with what the reader needs. Explain the reason and useful detail in natural language. Use shared context in conversation and enough context for the intended reader in standalone notes. Preserve meaning, examples, conditions, and uncertainty. Choose paragraphs, lists, or tables to fit the content. Report the result and the scope of verification. For additional examples in a standalone installation, read `notion-page --skill simple`.
+- **Be concise: use fewer words without losing meaning.** In user-facing replies, progress updates, and documents, lead with what the reader needs. Explain the reason and useful detail in natural language. Use shared context in conversation and enough context for the intended reader in standalone notes. Preserve meaning, examples, conditions, and uncertainty. Choose paragraphs, lists, or tables to fit the content. Report the result and the scope of verification. For additional examples in a standalone installation, read `notion-page --skill simple`.
 
 - When writing in Turkish, apply the Turkish writing guidance included in the combined skill. For a standalone page conversion, read `notion-page --skill turkish-writing` for natural phrasing, terminology, and spelling.
 
@@ -71,11 +71,13 @@ Source: [skill/notion-page/SKILL.md](https://github.com/saadettinBerber/notion-s
 
 ## simple
 
-Adapt replies and documents to the reader with clear language and useful Markdown. Use when the user asks for simpler explanations, concise updates, readable notes, or a consistent communication style.
+**Be concise: use fewer words without losing meaning.** Adapt replies and documents to the reader with clear language and useful Markdown. Use when the user asks for simpler explanations, concise updates, readable notes, or a consistent communication style.
 
 Source: [skill/simple/SKILL.md](https://github.com/saadettinBerber/notion-styles-page/blob/main/skill/simple/SKILL.md)
 
 ### Simple communication
+
+**Be concise: use fewer words without losing meaning.**
 
 Apply these principles when talking with the user, sharing progress, reporting
 results, and preparing content for others. Choose the language and level of detail
