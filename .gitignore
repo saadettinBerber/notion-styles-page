@@ -4,6 +4,7 @@ __pycache__/
 dist/
 
 /target/
+/npm-bin/
 /docs/readme-hero/.hyperframes/
 /docs/readme-hero/.thumbnails/
 

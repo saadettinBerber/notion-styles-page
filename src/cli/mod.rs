@@ -1,6 +1,7 @@
 mod archive;
 mod build;
 mod skills;
+mod update;
 
 use std::path::PathBuf;
 use std::process::ExitCode;
@@ -18,6 +19,8 @@ Examples
   notion-page --restore notes.html
   notion-page --skill
   notion-page --skill simple
+  notion-page update
+  notion-page update --pull
 
 Exit Codes
   0  Success
@@ -29,9 +32,14 @@ Exit Codes
     name = env!("CARGO_BIN_NAME"),
     about = "Convert Markdown into Notion-style HTML",
     version,
+    subcommand_negates_reqs = true,
+    args_conflicts_with_subcommands = true,
     after_help = HELP_FOOTER
 )]
 struct Args {
+    #[command(subcommand)]
+    command: Option<Command>,
+
     /// Markdown files to convert, or HTML archives to restore
     #[arg(
         required_unless_present_any = ["skills", "skill"],
@@ -79,8 +87,23 @@ struct Args {
     skill: Option<skills::Skill>,
 }
 
+#[derive(clap::Subcommand)]
+enum Command {
+    /// Update the installed CLI and skills from a source checkout
+    Update(update::Args),
+}
+
 pub(crate) fn run() -> ExitCode {
     let args = Args::parse();
+    if let Some(Command::Update(args)) = args.command {
+        return match update::run(args) {
+            Ok(()) => ExitCode::SUCCESS,
+            Err(error) => {
+                eprintln!("✗ {error}");
+                ExitCode::FAILURE
+            }
+        };
+    }
     if args.skills {
         skills::print_list();
         return ExitCode::SUCCESS;
