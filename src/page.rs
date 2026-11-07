@@ -14,6 +14,9 @@ pub struct PageOptions {
 
 const TEMPLATE: &str = include_str!("../assets/template.html");
 const STYLES: &str = include_str!("../assets/notion.css");
+const TERMS_STYLES: &str = "/* terms:start */";
+const TERMS_SCRIPT_START: &str = "<!-- terms-script:start -->\n";
+const TERMS_SCRIPT_END: &str = "<!-- terms-script:end -->\n";
 const IMAGE_PREFIXES: &[&str] = &["http://", "https://", "data:", "./", "../", "/"];
 const TAG_COLORS: &[&str] = &[
     "blue", "purple", "green", "orange", "pink", "yellow", "red", "brown",
@@ -37,10 +40,18 @@ pub(crate) fn render_shell(
     lang: &str,
     extra_css: &str,
     options: &PageOptions,
+    has_terms: bool,
 ) -> Result<String, PageError> {
     let cover = cover_html(topic.cover())?;
     let font = options.font.or(topic.font()).unwrap_or_default();
-    let mut styles = format!("{code_css}\n{STYLES}");
+    let base_styles = if has_terms {
+        STYLES
+    } else {
+        STYLES
+            .split_once(TERMS_STYLES)
+            .map_or(STYLES, |(base, _)| base)
+    };
+    let mut styles = format!("{code_css}\n{base_styles}");
     let font_styles = font.stylesheet();
     if !font_styles.is_empty() {
         styles.push('\n');
@@ -51,7 +62,8 @@ pub(crate) fn render_shell(
         styles.push_str(extra_css);
     }
     let body = DIAGRAM.replace_all(body_html, r#"${1}<div class="diagram-scroll">${2}</div>"#);
-    let values: [(&str, &str); 10] = [
+    let highlight_id = format!("{:08x}", crc32fast::hash(body.as_bytes()));
+    let values: [(&str, &str); 11] = [
         ("lang", &escape_html(lang)),
         ("title", &escape_html(topic.title())),
         ("description", &escape_html(topic.summary())),
@@ -62,19 +74,31 @@ pub(crate) fn render_shell(
         ("cover", &cover),
         ("properties", &properties_html(topic)),
         ("body", &body),
+        ("highlight_id", &highlight_id),
     ];
 
-    Ok(substitute(&values))
+    let template = if has_terms {
+        std::borrow::Cow::Borrowed(TEMPLATE)
+    } else {
+        let (before, script) = TEMPLATE
+            .split_once(TERMS_SCRIPT_START)
+            .expect("template has glossary script marker");
+        let (_, after) = script
+            .split_once(TERMS_SCRIPT_END)
+            .expect("template has glossary script end marker");
+        std::borrow::Cow::Owned(format!("{before}{after}"))
+    };
+    Ok(substitute(&template, &values))
 }
 
-fn substitute(values: &[(&str, &str)]) -> String {
+fn substitute(template: &str, values: &[(&str, &str)]) -> String {
     let mut result = String::new();
     let mut cursor = 0;
-    for captures in PLACEHOLDER.captures_iter(TEMPLATE) {
+    for captures in PLACEHOLDER.captures_iter(template) {
         let placeholder = captures
             .get(0)
             .expect("regex matches include the whole match");
-        result.push_str(&TEMPLATE[cursor..placeholder.start()]);
+        result.push_str(&template[cursor..placeholder.start()]);
         let replacement = captures.get(1).map_or("$", |name| {
             values
                 .iter()
@@ -84,7 +108,7 @@ fn substitute(values: &[(&str, &str)]) -> String {
         result.push_str(replacement);
         cursor = placeholder.end();
     }
-    result.push_str(&TEMPLATE[cursor..]);
+    result.push_str(&template[cursor..]);
     result
 }
 
@@ -197,6 +221,7 @@ mod tests {
             "tr",
             "",
             &PageOptions::default(),
+            false,
         )
     }
 
@@ -226,6 +251,30 @@ mod tests {
         let html = render(&topic, body, "").unwrap();
         assert!(html.contains("<figure>\n<div class=\"diagram-scroll\"><svg>"));
         assert!(html.contains("</svg></div>\n<figcaption>"));
+    }
+
+    #[test]
+    fn reader_highlights_are_scoped_to_content_and_survive_font_changes() {
+        let topic = topic("title: Reading");
+        let id = Regex::new(r"notion-page:highlights:v1:.*:([0-9a-f]{8})'").unwrap();
+        let render_with = |body, font| {
+            render_shell(
+                &topic,
+                body,
+                "",
+                "tr",
+                "",
+                &PageOptions { font: Some(font) },
+                false,
+            )
+            .unwrap()
+        };
+        let first = render_with("<p>First text.</p>", crate::FontPreset::System);
+        let new_font = render_with("<p>First text.</p>", crate::FontPreset::DailyDose);
+        let changed = render_with("<p>Other text.</p>", crate::FontPreset::System);
+        let key = |html: &str| id.captures(html).unwrap()[1].to_owned();
+        assert_eq!(key(&first), key(&new_font));
+        assert_ne!(key(&first), key(&changed));
     }
 
     #[test]

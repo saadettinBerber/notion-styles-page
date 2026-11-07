@@ -4,7 +4,9 @@ use std::fs;
 use std::io::{self, Seek, Write};
 use std::path::{Component, Path, PathBuf};
 
-use notion_sayfa::{LocalMedia, PageError, PageOptions, prepare_page, render_page_with_options};
+use notion_sayfa::{
+    LocalMedia, PageError, PageOptions, prepare_page, render_page_with_diagnostics,
+};
 use tempfile::NamedTempFile;
 
 use super::archive;
@@ -102,7 +104,8 @@ fn build_page(
     }
     let text = fs::read_to_string(source).map_err(|error| file_error(source, error))?;
     let page = prepare_page(&text).map_err(BuildError::Page)?;
-    let mut html = render_page_with_options(&page, media, options).map_err(BuildError::Page)?;
+    let rendered = render_page_with_diagnostics(&page, media, options).map_err(BuildError::Page)?;
+    let mut html = rendered.html;
     let output = output_path(source, destination, ".html");
     if archive_source {
         archive::embed(&mut html, &text);
@@ -110,6 +113,9 @@ fn build_page(
         remove_archived_source(source, &text)?;
     } else {
         write_page(&output, html.as_bytes()).map_err(|error| file_error(&output, error))?;
+    }
+    for warning in rendered.warnings {
+        eprintln!("{}: warning: {warning}", source.display());
     }
     Ok(output)
 }

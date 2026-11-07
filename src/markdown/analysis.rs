@@ -41,6 +41,13 @@ pub struct ContainerUse {
 }
 
 #[derive(Serialize)]
+pub struct GlossaryTerm {
+    pub term: String,
+    pub definition: String,
+    pub source_range: SourceRange,
+}
+
+#[derive(Serialize)]
 pub struct ProtectedRange {
     pub kind: &'static str,
     pub source_range: SourceRange,
@@ -72,6 +79,7 @@ pub struct Analysis {
     pub blocks: Vec<Block>,
     pub image_destinations: Vec<Destination>,
     pub container_uses: Vec<ContainerUse>,
+    pub glossary_terms: Vec<GlossaryTerm>,
     pub protected_ranges: Vec<ProtectedRange>,
     pub plain_text: String,
     pub formatting: Formatting,

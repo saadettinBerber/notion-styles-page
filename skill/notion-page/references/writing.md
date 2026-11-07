@@ -47,6 +47,17 @@ Supported syntax includes headings, **bold**, *italic*, ~~strikethrough~~, `inli
 
 Code blocks scroll horizontally to preserve indentation. Fences tagged `text` wrap long lines inside the block; use them for prompts, logs, and other plain text. `==Highlighted text==` adds a yellow highlight.
 
+Readers can also select text in the HTML and choose **Vurgula** to highlight it,
+or **Vurguyu kaldır** to remove the selected portion of a reading highlight.
+Choose **Vurgulu HTML’i kaydet** to download a copy with marks embedded in the
+HTML. Use that copy to reopen or share the page, including in another browser
+or when browser storage is blocked. Save again after edits; the open file is not
+overwritten automatically. Saved reading marks never change Markdown or
+`--restore` output; only archived pages contain restorable Markdown.
+Unsaved edits use browser storage for the current file and content when available.
+Moving the file, changing its content, or clearing browser storage loses unsaved
+edits. Reading highlights work offline in browsers with the CSS Custom Highlight API.
+
 ## Notion blocks
 
 Open a container with `:::name` and close it with `:::` on its own line. Containers support Markdown content. A container marker inside a code fence is literal text.
@@ -118,6 +129,46 @@ Hidden explanation.
 :::
 ::::
 ```
+
+## Glossary terms
+
+Define unfamiliar terms once in a `:::terms` block. It can appear anywhere in the
+body; placing it at the end keeps definitions together. The block itself has no
+visible output.
+
+```markdown
+BREX checks project rules. A crate provides reusable Rust code.
+
+:::terms
+- **BREX:** Business Rules Exchange: the project's own S1000D rules.
+- **Crate:** A Rust library package, such as `serde`.
+:::
+```
+
+Each item must be one line in the form `- **Term:** definition`. Definitions
+support inline Markdown, including emphasis, code, and links. Use at most one
+terms block per page and define each term once. Malformed items, duplicate terms,
+and a second block stop conversion with the original source line number. An
+unused term produces a warning on stderr; the page is still written.
+
+The first occurrence of each term is marked with a dotted underline in each
+`##` section, including the content before the first `##`. Matching includes
+paragraphs, lists, table cells, callouts, toggle bodies, and blockquotes. Headings,
+toggle titles, code, links, raw HTML, figures/SVG, frontmatter, and the glossary
+itself are excluded.
+
+Terms match their written spelling. When the second letter is lowercase, the
+first letter can also be lowercase: `Crate` matches `crate'leri`. Turkish casing
+is respected (`İ` → `i`, `I` → `ı`); acronyms remain case-sensitive. Turkish
+suffixes stay inside the marked word, including `BREX'e`, `XSD’nin`, and
+`veri modülünü`. A preceding letter or digit prevents a match. When terms
+overlap, the longer term wins.
+
+Click or tap a marked word to open its definition; press Esc or click outside to
+close it. Tab followed by Enter also opens the card. Only one card stays open.
+Cards follow the page's light or dark theme and fit phone screens. Native browser
+popovers still work without JavaScript, with the card centered instead of next to
+the word. Archive and restore preserve the original terms block exactly.
 
 ## Media
 

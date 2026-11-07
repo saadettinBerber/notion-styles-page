@@ -410,6 +410,40 @@ fn output_flag_alias_produces_the_same_html() {
 }
 
 #[test]
+fn reader_highlights_do_not_change_restored_markdown() {
+    let workspace = tempdir().unwrap();
+    let directory = workspace.path();
+    let source = "---\r\ntitle: Reading\r\n---\r\n\r\nReader text with ==author emphasis==.\r\n";
+    write(directory, "reading.md", source);
+    assert_success(
+        &run(directory, &["--archive", "reading.md"]),
+        "✓ reading.md → reading.html\n",
+    );
+    let html = fs::read_to_string(directory.join("reading.html")).unwrap();
+    assert!(html.contains("::highlight(reader-highlight)"));
+    assert!(html.contains("data-highlight=\"add\""));
+    assert!(html.contains("class=\"reader-highlight-save\""));
+    assert!(html.contains("<mark>author emphasis</mark>"));
+    // Saved reading marks and their removal leave the embedded Markdown unchanged.
+    for (name, spans) in [("highlighted", "[[3,9],[14,17]]"), ("cleared", "[]")] {
+        let saved = html.replace(
+            r#"id="reader-highlight-data">[]"#,
+            &format!(r#"id="reader-highlight-data" data-revision="123">{spans}"#),
+        );
+        assert_ne!(html, saved);
+        write(directory, &format!("copies/{name}.html"), &saved);
+        assert_success(
+            &run(directory, &["--restore", &format!("copies/{name}.html")]),
+            &format!("✓ {name}.html → {name}.md\n"),
+        );
+        assert_eq!(
+            fs::read(directory.join(format!("copies/{name}.md"))).unwrap(),
+            source.as_bytes()
+        );
+    }
+}
+
+#[test]
 fn archive_removes_markdown_and_restore_recovers_its_exact_bytes() {
     let workspace = tempdir().unwrap();
     let directory = workspace.path();

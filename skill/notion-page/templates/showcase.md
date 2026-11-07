@@ -22,6 +22,13 @@ A **callout** highlights a main idea. It supports **bold**, *italic*, `code`, an
 
 A plain paragraph with ==highlighted text== and ~~strikethrough~~.
 
+Select any passage while reading and choose **Vurgula** to add your own yellow
+highlight. Select it again and choose **Vurguyu kaldır** to erase that portion.
+Choose **Vurgulu HTML’i kaydet** to download a copy with your reading marks.
+Open that copy in another browser or share it with someone else; the marks stay
+in the HTML. Save again after edits. Reading marks never change Markdown or the
+source recovered by `--restore`.
+
 ## Heading 2
 
 - A bullet list
@@ -138,6 +145,21 @@ These lines do not open a container.
 :::
 ```
 
+## Glossary terms
+
+BREX checks a project's S1000D rules, while XSD describes an XML document's
+structure. A crate packages reusable Rust code. Click a dotted word to read its
+definition, or reach it with Tab and press Enter. Press Esc to close the card.
+
+BREX appears again here without another underline because only its first use in
+this section is marked.
+
 Footnotes are supported too.[^1]
 
 [^1]: Footnotes are collected at the bottom of the page.
+
+:::terms
+- **BREX:** Business Rules Exchange: a project's own **S1000D rules**.
+- **XSD:** XML Schema Definition: a schema for the structure of an XML document.
+- **Crate:** A Rust library package, such as `serde`. See the [Rust guide](https://doc.rust-lang.org/book/ch07-01-packages-and-crates.html).
+:::

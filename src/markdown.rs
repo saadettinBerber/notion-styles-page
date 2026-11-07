@@ -4,6 +4,7 @@ mod footnotes;
 mod highlight;
 mod inline;
 mod renderer;
+pub(crate) mod terms;
 
 use std::sync::LazyLock;
 
@@ -25,11 +26,19 @@ pub(crate) fn prepare(source: &str) -> PreparedMarkdown {
     PreparedMarkdown(PARSER.parse(source))
 }
 
+#[cfg(test)]
 pub(crate) fn render(
     prepared: &PreparedMarkdown,
     media: &(impl MediaSource + ?Sized),
 ) -> Result<String, PageError> {
     renderer::render(&prepared.0, media)
+}
+
+pub(crate) fn render_with_warnings(
+    prepared: &PreparedMarkdown,
+    media: &(impl MediaSource + ?Sized),
+) -> Result<RenderedBody, PageError> {
+    renderer::render_with_warnings(&prepared.0, media)
 }
 
 pub(crate) fn prepare_reader(source: &str) -> PreparedMarkdown {
@@ -41,8 +50,21 @@ pub(crate) fn analyze(
     source: &str,
     body_start: usize,
 ) -> Result<Analysis, PageError> {
+    terms::validate(&prepared.0, source, body_start)?;
     blocks::validate(&prepared.0, source, body_start)?;
     analysis::analyze(&prepared.0, source, body_start)
+}
+
+pub(crate) fn validate_terms(
+    prepared: &PreparedMarkdown,
+    source: &str,
+    body_start: usize,
+) -> Result<(), PageError> {
+    terms::validate(&prepared.0, source, body_start)
+}
+
+pub(crate) fn has_terms(prepared: &PreparedMarkdown) -> bool {
+    !terms::definitions(&prepared.0).is_empty()
 }
 
 pub(crate) fn render_document(
@@ -68,6 +90,7 @@ fn make_parser(reader: bool) -> MarkdownIt {
         footnotes::add(&mut parser);
     }
     inline::add(&mut parser);
+    terms::add(&mut parser);
     parser
 }
 

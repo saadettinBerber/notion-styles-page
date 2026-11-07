@@ -80,6 +80,40 @@ fn container_usage_keeps_indentation_inside_a_quote() {
 }
 
 #[test]
+fn glossary_queries_preserve_entries_and_original_source_coordinates() {
+    let header = "\u{feff}---\r\ntitle: Terimler 🧠\r\n---\r\n";
+    let body = concat!(
+        "Çağrı hakkında.\r\n\r\n:::terms\r\n",
+        "- **Çağrı:** Bir **işlemi** başlatma; `run` ve [bağ](https://example.test).\r\n",
+        "- **BREX:** Kurallar.\r\n:::\r\n"
+    );
+    let source = format!("{header}{body}");
+    let result = inspect(&source, header.len());
+    let terms = result["glossary_terms"].as_array().unwrap();
+
+    assert_eq!(terms.len(), 2);
+    assert_eq!(terms[0]["term"], "Çağrı");
+    assert_eq!(
+        terms[0]["definition"],
+        "Bir **işlemi** başlatma; `run` ve [bağ](https://example.test)."
+    );
+    assert_eq!(
+        slice(&source, &terms[0]["source_range"]).trim_end(),
+        "- **Çağrı:** Bir **işlemi** başlatma; `run` ve [bağ](https://example.test)."
+    );
+    let container = &result["container_uses"][0];
+    assert_eq!(container["name"], "terms");
+    assert_eq!(
+        slice(&source, &container["source_range"]),
+        &body[body.find(":::terms").unwrap()..]
+    );
+    let block = &result["blocks"][1];
+    assert_eq!(block["kind"], "container:terms");
+    assert_eq!(block["children"][0]["kind"], "glossary_term");
+    assert_eq!(block["children"].as_array().unwrap().len(), 2);
+}
+
+#[test]
 fn nested_named_footnotes_participate_in_their_source_parent_shape() {
     let source = "A[^n]\n\n> [^n]: note\n>\n> text\n";
     let result = inspect(source, 0);
