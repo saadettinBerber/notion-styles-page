@@ -22,6 +22,13 @@ A **callout** highlights a main idea. It supports **bold**, *italic*, `code`, an
 
 A plain paragraph with ==highlighted text== and ~~strikethrough~~.
 
+Select any passage while reading and choose **Vurgula** to add your own yellow
+highlight. Select it again and choose **Vurguyu kaldır** to erase that portion.
+Choose **Vurgulu HTML’i kaydet** to download a copy with your reading marks.
+Open that copy in another browser or share it with someone else; the marks stay
+in the HTML. Save again after edits. Reading marks never change Markdown or the
+source recovered by `--restore`.
+
 ## Heading 2
 
 - A bullet list

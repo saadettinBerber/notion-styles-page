@@ -18,23 +18,26 @@ const BEFORE_RAW_SOURCE: &str = include_str!("fixtures/glossary-no-terms-raw.md"
 const BEFORE_RAW_HTML: &[u8] = include_bytes!("fixtures/glossary-no-terms-raw.html");
 
 #[test]
-fn documents_without_a_glossary_keep_the_exact_previous_html() {
+fn documents_without_a_glossary_keep_previous_html_apart_from_reader_highlights() {
+    let reader_assets = Regex::new(
+        r"(?s)/\* reader-highlights:start \*/.*?/\* reader-highlights:end \*/\n\n|<!-- reader-highlights:start -->\n.*?<!-- reader-highlights:end -->\n",
+    )
+    .unwrap();
     for (source, expected) in [
         (BEFORE_SOURCE, BEFORE_HTML),
         (BEFORE_RAW_SOURCE, BEFORE_RAW_HTML),
     ] {
         let page = prepare_page(source).unwrap();
-        assert_eq!(render_page(&page, &TestMedia).unwrap().as_bytes(), expected);
+        let html = render_page(&page, &TestMedia).unwrap();
+        assert_eq!(reader_assets.replace_all(&html, "").as_bytes(), expected);
 
         let directory = tempdir().unwrap();
         fs::write(directory.path().join("plain.md"), source).unwrap();
         let result = run(directory.path(), &["plain.md"]);
         assert_success(&result);
         assert!(result.stderr.is_empty());
-        assert_eq!(
-            fs::read(directory.path().join("plain.html")).unwrap(),
-            expected
-        );
+        let html = fs::read_to_string(directory.path().join("plain.html")).unwrap();
+        assert_eq!(reader_assets.replace_all(&html, "").as_bytes(), expected);
     }
 }
 

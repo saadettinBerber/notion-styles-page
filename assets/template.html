@@ -22,6 +22,176 @@ $cover
 $body
   </article>
 </main>
+<!-- reader-highlights:start -->
+<div class="reader-highlight-tools" role="group" aria-label="Metin vurgulama" hidden>
+  <button type="button" data-highlight="add">Vurgula</button>
+  <button type="button" data-highlight="remove">Vurguyu kaldır</button>
+</div>
+<button class="reader-highlight-save" type="button" hidden>Vurgulu HTML’i kaydet</button>
+<p class="reader-highlight-status" role="status"></p>
+<script type="application/json" id="reader-highlight-data">[]</script>
+<script>
+(() => {
+  const article = document.querySelector('.page-body');
+  const tools = document.querySelector('.reader-highlight-tools');
+  const save = document.querySelector('.reader-highlight-save');
+  const data = document.getElementById('reader-highlight-data');
+  const status = document.querySelector('.reader-highlight-status');
+  if (!article || !CSS.highlights || typeof Highlight === 'undefined') return;
+  article.tabIndex = -1;
+  const key = 'notion-page:highlights:v1:' + location.pathname + ':$highlight_id' +
+    (data.dataset.revision ? ':' + data.dataset.revision : '');
+  const nodes = [];
+  const walker = document.createTreeWalker(article, NodeFilter.SHOW_TEXT);
+  let length = 0;
+  while (walker.nextNode()) {
+    const node = walker.currentNode;
+    nodes.push({ node, start: length, end: length + node.length });
+    length += node.length;
+  }
+  const paint = () => {
+    const highlight = new Highlight();
+    for (const [start, end] of spans) {
+      const first = nodes.find(entry => entry.end > start);
+      const last = nodes.find(entry => entry.end >= end);
+      const range = new Range();
+      range.setStart(first.node, start - first.start);
+      range.setEnd(last.node, end - last.start);
+      highlight.add(range);
+    }
+    CSS.highlights.set('reader-highlight', highlight);
+  };
+  let saved = data.textContent;
+  try { saved = localStorage.getItem(key) ?? saved; }
+  catch { /* The embedded copy also works when browser storage is blocked. */ }
+  let spans = [];
+  try {
+    const stored = JSON.parse(saved);
+    if (Array.isArray(stored)) {
+      spans = stored.filter(span => Array.isArray(span) && span.length === 2 &&
+        span.every(Number.isInteger) && span[0] >= 0 && span[0] < span[1] && span[1] <= length);
+    }
+  } catch { /* Ignore damaged reading marks without preventing page use. */ }
+  paint();
+  save.hidden = !spans.length && data.textContent === '[]';
+  let pending;
+  let messageTimer;
+  const announce = message => {
+    clearTimeout(messageTimer);
+    status.textContent = message;
+    messageTimer = setTimeout(() => { status.textContent = ''; }, 5000);
+  };
+  const hide = () => { tools.hidden = true; pending = undefined; };
+  const offset = (node, position) => {
+    const range = new Range();
+    range.selectNodeContents(article);
+    range.setEnd(node, position);
+    return range.toString().length;
+  };
+  const update = () => {
+    if (tools.contains(document.activeElement)) return;
+    const selection = window.getSelection();
+    if (!selection || selection.isCollapsed || selection.rangeCount !== 1) return hide();
+    const range = selection.getRangeAt(0);
+    if (!article.contains(range.startContainer) || !article.contains(range.endContainer) ||
+        !range.toString().trim()) return hide();
+    pending = [offset(range.startContainer, range.startOffset), offset(range.endContainer, range.endOffset)];
+    tools.querySelector('[data-highlight="remove"]').disabled =
+      !spans.some(([start, end]) => start < pending[1] && end > pending[0]);
+    tools.hidden = false;
+    const rect = range.getBoundingClientRect();
+    const box = tools.getBoundingClientRect();
+    const gap = 8;
+    const width = document.documentElement.clientWidth;
+    tools.style.left = Math.max(gap, Math.min(rect.left, width - box.width - gap)) + 'px';
+    const top = rect.top >= box.height + gap ? rect.top - box.height - gap : rect.bottom + gap;
+    tools.style.top = Math.max(gap, Math.min(top, window.innerHeight - box.height - gap)) + 'px';
+  };
+  document.addEventListener('selectionchange', update);
+  tools.addEventListener('pointerdown', event => event.preventDefault());
+  tools.addEventListener('click', event => {
+    const button = event.target.closest('button[data-highlight]');
+    if (!button || !pending) return;
+    const [start, end] = pending;
+    if (button.dataset.highlight === 'add') {
+      const merged = [];
+      for (const span of [...spans, [start, end]].sort((a, b) => a[0] - b[0])) {
+        const last = merged[merged.length - 1];
+        if (last && last[1] >= span[0]) last[1] = Math.max(last[1], span[1]);
+        else merged.push([...span]);
+      }
+      spans = merged;
+    } else {
+      spans = spans.flatMap(([left, right]) => {
+        if (right <= start || left >= end) return [[left, right]];
+        const remaining = [];
+        if (left < start) remaining.push([left, start]);
+        if (right > end) remaining.push([end, right]);
+        return remaining;
+      });
+    }
+    paint();
+    save.hidden = false;
+    try {
+      localStorage.setItem(key, JSON.stringify(spans));
+      announce('Vurgular bu tarayıcıda saklanır. Dosyada saklamak için “Vurgulu HTML’i kaydet”i kullanın.');
+    } catch {
+      announce('Tarayıcı kaydetmeye izin vermiyor. Vurguları korumak için “Vurgulu HTML’i kaydet”i kullanın.');
+    }
+    const returnFocus = tools.contains(document.activeElement);
+    hide();
+    window.getSelection().removeAllRanges();
+    if (returnFocus) article.focus({ preventScroll: true });
+  });
+  save.addEventListener('click', () => {
+    let url;
+    try {
+      const copy = document.cloneNode(true);
+      const embedded = copy.getElementById('reader-highlight-data');
+      embedded.textContent = JSON.stringify(spans);
+      // A newly saved file takes precedence over cached edits to an older copy.
+      embedded.dataset.revision = String(Date.now());
+      const copiedTools = copy.querySelector('.reader-highlight-tools');
+      copiedTools.hidden = true;
+      copiedTools.removeAttribute('style');
+      copy.querySelector('.reader-highlight-status').textContent = '';
+      // The Markdown archive is a document-level comment after </html>.
+      const html = Array.from(copy.childNodes, node => {
+        if (node.nodeType === Node.DOCUMENT_TYPE_NODE) return '<!DOCTYPE html>';
+        if (node.nodeType === Node.COMMENT_NODE) return '<!--' + node.data + '-->';
+        return node.outerHTML || '';
+      }).join('\n') + '\n';
+      url = URL.createObjectURL(new Blob([html], { type: 'text/html;charset=utf-8' }));
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = (document.title || 'sayfa') + '-vurgulu.html';
+      document.body.append(link);
+      link.click();
+      link.remove();
+      announce('Vurgulu HTML indiriliyor. Yeniden açmak veya paylaşmak için indirilen kopyayı kullanın.');
+    } catch {
+      announce('HTML kaydedilemedi. Vurgular bu sayfada duruyor; tekrar deneyin.');
+    } finally {
+      if (url) setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+  });
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Tab' && !event.shiftKey && pending && !tools.hidden &&
+        !tools.contains(document.activeElement)) {
+      event.preventDefault();
+      tools.querySelector('button').focus();
+    }
+    if (event.key === 'Escape') {
+      if (tools.contains(document.activeElement)) article.focus({ preventScroll: true });
+      hide();
+      window.getSelection().removeAllRanges();
+    }
+  });
+  window.addEventListener('resize', hide);
+  document.addEventListener('scroll', hide, true);
+})();
+</script>
+<!-- reader-highlights:end -->
 <!-- terms-script:start -->
 <script>
 (() => {

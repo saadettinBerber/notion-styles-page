@@ -89,6 +89,22 @@ notion-page notes.md
 
 Open `notes.html`.
 
+Select text while reading, then choose **Vurgula** to highlight it in yellow.
+Select highlighted text and choose **Vurguyu kaldır** to remove that portion.
+Choose **Vurgulu HTML’i kaydet** to download an HTML copy with your highlights
+embedded. Open or share that downloaded file to carry the highlights to another
+browser or computer, including when browser storage is blocked. Save a new copy
+after adding or removing marks; the open file is not overwritten automatically.
+The original Markdown archive is preserved, and `--restore` still returns the
+exact source without reading marks.
+
+Unsaved edits also stay in this browser's local storage for this file and content
+when storage is available. Moving the file, changing its content, or clearing
+browser data loses those unsaved edits. This feature requires a browser with the
+[CSS Custom Highlight API](https://developer.mozilla.org/en-US/docs/Web/API/CSS_Custom_Highlight_API).
+It works offline and never changes Markdown. Regular HTML without an embedded
+Markdown archive still cannot be restored with `--restore`.
+
 Define unfamiliar vocabulary once with a `:::terms` block. Each section's first
 prose occurrence becomes a dotted word that opens a definition card by click,
 tap, or keyboard. Definitions support inline Markdown; cards work offline in

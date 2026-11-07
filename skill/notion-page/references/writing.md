@@ -47,6 +47,17 @@ Supported syntax includes headings, **bold**, *italic*, ~~strikethrough~~, `inli
 
 Code blocks scroll horizontally to preserve indentation. Fences tagged `text` wrap long lines inside the block; use them for prompts, logs, and other plain text. `==Highlighted text==` adds a yellow highlight.
 
+Readers can also select text in the HTML and choose **Vurgula** to highlight it,
+or **Vurguyu kaldır** to remove the selected portion of a reading highlight.
+Choose **Vurgulu HTML’i kaydet** to download a copy with marks embedded in the
+HTML. Use that copy to reopen or share the page, including in another browser
+or when browser storage is blocked. Save again after edits; the open file is not
+overwritten automatically. Saved reading marks never change Markdown or
+`--restore` output; only archived pages contain restorable Markdown.
+Unsaved edits use browser storage for the current file and content when available.
+Moving the file, changing its content, or clearing browser storage loses unsaved
+edits. Reading highlights work offline in browsers with the CSS Custom Highlight API.
+
 ## Notion blocks
 
 Open a container with `:::name` and close it with `:::` on its own line. Containers support Markdown content. A container marker inside a code fence is literal text.

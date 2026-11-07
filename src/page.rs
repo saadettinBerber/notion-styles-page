@@ -62,7 +62,8 @@ pub(crate) fn render_shell(
         styles.push_str(extra_css);
     }
     let body = DIAGRAM.replace_all(body_html, r#"${1}<div class="diagram-scroll">${2}</div>"#);
-    let values: [(&str, &str); 10] = [
+    let highlight_id = format!("{:08x}", crc32fast::hash(body.as_bytes()));
+    let values: [(&str, &str); 11] = [
         ("lang", &escape_html(lang)),
         ("title", &escape_html(topic.title())),
         ("description", &escape_html(topic.summary())),
@@ -73,6 +74,7 @@ pub(crate) fn render_shell(
         ("cover", &cover),
         ("properties", &properties_html(topic)),
         ("body", &body),
+        ("highlight_id", &highlight_id),
     ];
 
     let template = if has_terms {
@@ -249,6 +251,30 @@ mod tests {
         let html = render(&topic, body, "").unwrap();
         assert!(html.contains("<figure>\n<div class=\"diagram-scroll\"><svg>"));
         assert!(html.contains("</svg></div>\n<figcaption>"));
+    }
+
+    #[test]
+    fn reader_highlights_are_scoped_to_content_and_survive_font_changes() {
+        let topic = topic("title: Reading");
+        let id = Regex::new(r"notion-page:highlights:v1:.*:([0-9a-f]{8})'").unwrap();
+        let render_with = |body, font| {
+            render_shell(
+                &topic,
+                body,
+                "",
+                "tr",
+                "",
+                &PageOptions { font: Some(font) },
+                false,
+            )
+            .unwrap()
+        };
+        let first = render_with("<p>First text.</p>", crate::FontPreset::System);
+        let new_font = render_with("<p>First text.</p>", crate::FontPreset::DailyDose);
+        let changed = render_with("<p>Other text.</p>", crate::FontPreset::System);
+        let key = |html: &str| id.captures(html).unwrap()[1].to_owned();
+        assert_eq!(key(&first), key(&new_font));
+        assert_ne!(key(&first), key(&changed));
     }
 
     #[test]
