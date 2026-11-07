@@ -13,6 +13,8 @@ description: Convert Markdown notes into a standalone, offline Notion-style HTML
 
 - Start Markdown with YAML frontmatter containing `title`. Follow the [writing guide](references/writing.md); consult the [showcase](templates/showcase.md) for supported blocks and the [drawing guide](references/drawing.md) for inline SVG.
 
+- Define unfamiliar vocabulary once in a `:::terms` block using `- **Term:** definition`. Each section's first prose occurrence opens a definition card. See [glossary terms](references/writing.md#glossary-terms) for matching rules and excluded content.
+
 - Run `notion-page notes.md`, or `notion-page notes/*.md --output pages`. Fix any reported errors before sharing the output.
 
 - Check the HTML in light and dark themes and at phone width. Look for overflow, overlapping labels, unclosed `:::` markers, and unreadable colors. If a browser cannot open a large embedded video through `file://`, serve the output with `python3 -m http.server 8000`.

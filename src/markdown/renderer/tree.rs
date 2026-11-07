@@ -21,6 +21,7 @@ use super::super::blocks::{
     Container, SUMMARY_CLOSE, SUMMARY_OPEN, TOGGLE_BODY_CLOSE, TOGGLE_BODY_OPEN, TOGGLE_CLOSE,
 };
 use super::super::footnotes::{Backlinks, Reference, UnusedDefinitions, note_id};
+use super::super::terms::Terms;
 use super::BodyRenderer;
 use crate::MediaSource;
 
@@ -208,9 +209,11 @@ impl<M: MediaSource + ?Sized> BodyRenderer<'_, M> {
     }
 
     fn summary_tree(&mut self, node: &Node) -> RenderNode {
+        let scope = self.glossary.enter(node);
         self.output.push_str(SUMMARY_OPEN);
         let title = self.render_leaf("container_title", &node.children, false, true);
         self.output.push_str(SUMMARY_CLOSE);
+        self.glossary.leave(scope);
         branch(
             "summary".into(),
             SUMMARY_OPEN.into(),
@@ -239,12 +242,7 @@ impl<M: MediaSource + ?Sized> BodyRenderer<'_, M> {
         inline: bool,
     ) -> RenderNode {
         let start = self.output.len();
-        for node in nodes {
-            self.element(node);
-            if self.error.is_some() {
-                break;
-            }
-        }
+        self.render_sequence(nodes);
         leaf(
             kind,
             self.fragment(start, self.output.len()),
@@ -287,7 +285,7 @@ fn role(node: &Node) -> Role<'_> {
         Role::Footnote(note)
     } else if let Some(anchors) = node.cast::<Backlinks>() {
         Role::Backlinks(anchors)
-    } else if node.is::<UnusedDefinitions>() {
+    } else if node.is::<UnusedDefinitions>() || node.is::<Terms>() {
         Role::Hidden
     } else if let Some(kind) = standard_branch(node) {
         Role::Branch(kind)

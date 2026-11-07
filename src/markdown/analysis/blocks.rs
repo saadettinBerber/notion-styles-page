@@ -20,6 +20,7 @@ use serde_json::{Value, json};
 use crate::PageError;
 use crate::markdown::blocks::{Container, Summary};
 use crate::markdown::footnotes;
+use crate::markdown::terms::{TermDefinition, Terms};
 
 use super::source::Source;
 use super::tracking::ImageLabel;
@@ -123,7 +124,7 @@ impl<'a> BlockReader<'a, '_> {
     fn read_block(&self, node: &'a Node) -> Result<Block, PageError> {
         let span = self.source.line_span(node)?;
         let (title, title_range) = title(node, self.source)?;
-        let children = if node.is::<Container>() {
+        let children = if node.is::<Container>() || node.is::<Terms>() {
             self.read_children(node)?
         } else {
             Vec::new()
@@ -170,6 +171,12 @@ pub(super) fn summary_span(
 }
 
 pub(super) fn block_kind(node: &Node) -> Option<&str> {
+    if node.is::<Terms>() {
+        return Some("container:terms");
+    }
+    if node.is::<TermDefinition>() {
+        return Some("glossary_term");
+    }
     if let Some(container) = node.cast::<Container>() {
         return Some(match container.name() {
             "callout" => "container:callout",
@@ -233,6 +240,12 @@ fn node_shape<'a>(
     let children = child_shapes(node, reader, table_head)?;
     if let Some(value) = special_shape(node, reader.source)? {
         return Ok(value);
+    }
+    if node.is::<Terms>() {
+        return Ok(json!(["container_terms_open", "", children]));
+    }
+    if let Some(term) = node.cast::<TermDefinition>() {
+        return Ok(json!(["glossary_term", term.term]));
     }
     if let Some(container) = node.cast::<Container>() {
         return Ok(json!([

@@ -22,11 +22,15 @@ use markdown_it_footnote::inline::InlineFootnote;
 use crate::PageError;
 use crate::markdown::blocks::{Container, Summary};
 use crate::markdown::footnotes::UnusedDefinitions;
+use crate::markdown::terms::{TermDefinition, Terms};
 
 use super::blocks::{is_named_note, notes, summary_span};
 use super::source::Source;
 use super::tracking::{CodeBytes, DestinationSpan};
-use super::{Analysis, CodeSignature, ContainerTitle, ContainerUse, Destination, ProtectedRange};
+use super::{
+    Analysis, CodeSignature, ContainerTitle, ContainerUse, Destination, GlossaryTerm,
+    ProtectedRange,
+};
 
 pub(super) fn read(
     root: &Node,
@@ -83,11 +87,22 @@ impl<'a> Queries<'a, '_> {
     }
 
     fn record_structure(&mut self, node: &Node) -> Result<(), PageError> {
-        if let Some(container) = node.cast::<Container>() {
+        let container_name = node
+            .cast::<Container>()
+            .map(Container::name)
+            .or_else(|| node.is::<Terms>().then_some("terms"));
+        if let Some(name) = container_name {
             let span = self.source.container_span(node)?;
             self.output.container_uses.push(ContainerUse {
-                name: container.name(),
+                name,
                 source_range: self.source.range(span)?,
+            });
+        }
+        if let Some(term) = node.cast::<TermDefinition>() {
+            self.output.glossary_terms.push(GlossaryTerm {
+                term: term.term.clone(),
+                definition: term.definition.clone(),
+                source_range: self.source.range(self.source.node(node)?)?,
             });
         }
         if node.is::<HtmlBlock>() || node.is::<HtmlInline>() {
@@ -104,6 +119,15 @@ impl<'a> Queries<'a, '_> {
     }
 
     fn record_text(&mut self, node: &Node) -> Result<(), PageError> {
+        if let Some(term) = node.cast::<TermDefinition>() {
+            let start = self.source.node(node)?.start;
+            self.add_text(
+                start,
+                format!("{}: {}", term.term, self.inline_text(&node.children)),
+                false,
+            );
+            return Ok(());
+        }
         if let Some((kind, language, content)) = code(node) {
             return self.record_code(node, kind, language, content);
         }
@@ -286,6 +310,9 @@ impl<'a> Queries<'a, '_> {
             .sort_by_key(|item| item.source_range);
         self.output
             .container_uses
+            .sort_by_key(|item| item.source_range);
+        self.output
+            .glossary_terms
             .sort_by_key(|item| item.source_range);
         self.output.formatting.raw_html_ranges.sort_unstable();
         self.output.formatting.raw_html_ranges.dedup();

@@ -1,4 +1,6 @@
 mod anchors;
+mod glossary;
+mod inline_terms;
 mod tree;
 
 use std::collections::HashMap;
@@ -19,7 +21,9 @@ use crate::{MediaSource, PageError, ReaderOptions};
 use super::blocks::{Container, SUMMARY_CLOSE, SUMMARY_OPEN, Summary, TOGGLE_BODY_OPEN};
 use super::footnotes::{Backlinks, Reference, note_id};
 use super::highlight::render_fence;
+use super::terms::{self, TermDefinition, Terms};
 use anchors::Anchors;
+use glossary::Glossary;
 use tree::Capture;
 
 pub use tree::RenderNode;
@@ -28,15 +32,31 @@ pub use tree::RenderNode;
 pub struct RenderedBody {
     pub html: String,
     pub render_nodes: Vec<RenderNode>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub warnings: Vec<String>,
 }
 
+#[cfg(test)]
 pub(super) fn render(
     root: &Node,
     media: &(impl MediaSource + ?Sized),
 ) -> Result<String, PageError> {
-    let mut renderer = BodyRenderer::new(media, None, Anchors::default());
+    Ok(render_with_warnings(root, media)?.html)
+}
+
+pub(super) fn render_with_warnings(
+    root: &Node,
+    media: &(impl MediaSource + ?Sized),
+) -> Result<RenderedBody, PageError> {
+    let mut renderer = BodyRenderer::new(media, None, Anchors::default(), Glossary::new(root, ""));
     renderer.contents(&root.children);
-    renderer.finish()
+    renderer.term_cards(root);
+    let warnings = renderer.glossary.warnings();
+    Ok(RenderedBody {
+        html: renderer.finish()?,
+        render_nodes: Vec::new(),
+        warnings,
+    })
 }
 
 pub(super) fn render_document(
@@ -45,11 +65,28 @@ pub(super) fn render_document(
     options: &ReaderOptions,
 ) -> Result<RenderedBody, PageError> {
     let anchors = Anchors::new(root, &options.id_prefix);
-    let mut renderer = BodyRenderer::new(media, Some(options), anchors);
-    let render_nodes = renderer.tree_nodes(&root.children);
+    let mut renderer = BodyRenderer::new(
+        media,
+        Some(options),
+        anchors,
+        Glossary::new(root, &options.id_prefix),
+    );
+    let mut render_nodes = renderer.tree_nodes(&root.children);
+    let start = renderer.output.len();
+    renderer.term_cards(root);
+    if renderer.output.len() > start {
+        render_nodes.push(RenderNode::Leaf {
+            kind: "glossary".into(),
+            html: renderer.output[start..].replace('\0', "\u{FFFD}"),
+            shared: false,
+            inline: false,
+        });
+    }
+    let warnings = renderer.glossary.warnings();
     Ok(RenderedBody {
         html: renderer.finish()?,
         render_nodes,
+        warnings,
     })
 }
 
@@ -57,6 +94,7 @@ struct BodyRenderer<'media, M: ?Sized> {
     media: &'media M,
     options: Option<&'media ReaderOptions>,
     anchors: Anchors,
+    glossary: Glossary,
     output: String,
     error: Option<PageError>,
     image_cache: HashMap<String, Option<String>>,
@@ -65,11 +103,17 @@ struct BodyRenderer<'media, M: ?Sized> {
 }
 
 impl<'media, M: MediaSource + ?Sized> BodyRenderer<'media, M> {
-    fn new(media: &'media M, options: Option<&'media ReaderOptions>, anchors: Anchors) -> Self {
+    fn new(
+        media: &'media M,
+        options: Option<&'media ReaderOptions>,
+        anchors: Anchors,
+        glossary: Glossary,
+    ) -> Self {
         Self {
             media,
             options,
             anchors,
+            glossary,
             output: String::new(),
             error: None,
             image_cache: HashMap::new(),
@@ -89,6 +133,30 @@ impl<'media, M: MediaSource + ?Sized> BodyRenderer<'media, M> {
     }
 
     fn element(&mut self, node: &Node) {
+        if node.is::<Terms>() {
+            return;
+        }
+        let scope = self.glossary.enter(node);
+        if !self.glossary.text_node(node, &mut self.output) {
+            self.render_element(node);
+        }
+        self.glossary.leave(scope);
+    }
+
+    fn render_sequence(&mut self, nodes: &[Node]) {
+        if self.glossary.has_inline_prose() {
+            self.render_inline_terms(nodes);
+        } else {
+            for node in nodes {
+                if self.error.is_some() {
+                    break;
+                }
+                self.element(node);
+            }
+        }
+    }
+
+    fn render_element(&mut self, node: &Node) {
         if let Some(block) = node.cast::<Container>() {
             self.container(block, node);
         } else if node.is::<Summary>() {
@@ -102,6 +170,23 @@ impl<'media, M: MediaSource + ?Sized> BodyRenderer<'media, M> {
             self.reader_element(node);
         } else {
             node.node_value.render(node, self);
+        }
+    }
+
+    fn term_cards(&mut self, root: &Node) {
+        for (index, definition) in terms::definitions(root).iter().enumerate() {
+            let term = &definition.cast::<TermDefinition>().unwrap().term;
+            self.cr();
+            self.text_raw("<div id=\"");
+            self.output
+                .push_str(&escape_html(&self.glossary.ids[index]));
+            self.text_raw("\" class=\"term-card\" popover><strong>");
+            self.text(term);
+            self.text_raw("</strong>");
+            let scope = self.glossary.enter(definition);
+            self.contents(&definition.children);
+            self.glossary.leave(scope);
+            self.text_raw("</div>\n");
         }
     }
 
@@ -292,12 +377,7 @@ impl<M: MediaSource + ?Sized> Renderer for BodyRenderer<'_, M> {
             self.capture = Some(capture);
             return;
         }
-        for node in nodes {
-            if self.error.is_some() {
-                break;
-            }
-            self.element(node);
-        }
+        self.render_sequence(nodes);
     }
 
     fn cr(&mut self) {

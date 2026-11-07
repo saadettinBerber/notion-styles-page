@@ -43,7 +43,7 @@ impl NodeValue for Container {}
 pub(super) struct Summary;
 impl NodeValue for Summary {}
 
-struct ContainerRule;
+pub(super) struct ContainerRule;
 
 #[derive(Debug)]
 struct ReaderContainers;
@@ -143,12 +143,10 @@ fn count_marker(text: &str, markers: &mut Vec<usize>, balanced: bool) -> bool {
         markers.pop();
         return markers.is_empty();
     }
-    if balanced {
-        let count = colon_count(text);
-        let name = text[count..].trim().split(' ').next().unwrap_or_default();
-        if count >= 3 && Kind::named(name).is_some() {
-            markers.push(count);
-        }
+    let count = colon_count(text);
+    let name = text[count..].trim().split(' ').next().unwrap_or_default();
+    if count >= 3 && (name == "terms" || (balanced && Kind::named(name).is_some())) {
+        markers.push(count);
     }
     false
 }

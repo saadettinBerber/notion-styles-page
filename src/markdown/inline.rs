@@ -16,7 +16,7 @@ pub(super) fn add(parser: &mut MarkdownIt) {
 }
 
 #[derive(Debug)]
-struct Mark;
+pub(super) struct Mark;
 impl NodeValue for Mark {
     fn render(&self, node: &Node, html: &mut dyn Renderer) {
         html.open("mark", &node.attrs);

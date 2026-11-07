@@ -14,6 +14,9 @@ pub struct PageOptions {
 
 const TEMPLATE: &str = include_str!("../assets/template.html");
 const STYLES: &str = include_str!("../assets/notion.css");
+const TERMS_STYLES: &str = "/* terms:start */";
+const TERMS_SCRIPT_START: &str = "<!-- terms-script:start -->\n";
+const TERMS_SCRIPT_END: &str = "<!-- terms-script:end -->\n";
 const IMAGE_PREFIXES: &[&str] = &["http://", "https://", "data:", "./", "../", "/"];
 const TAG_COLORS: &[&str] = &[
     "blue", "purple", "green", "orange", "pink", "yellow", "red", "brown",
@@ -37,10 +40,18 @@ pub(crate) fn render_shell(
     lang: &str,
     extra_css: &str,
     options: &PageOptions,
+    has_terms: bool,
 ) -> Result<String, PageError> {
     let cover = cover_html(topic.cover())?;
     let font = options.font.or(topic.font()).unwrap_or_default();
-    let mut styles = format!("{code_css}\n{STYLES}");
+    let base_styles = if has_terms {
+        STYLES
+    } else {
+        STYLES
+            .split_once(TERMS_STYLES)
+            .map_or(STYLES, |(base, _)| base)
+    };
+    let mut styles = format!("{code_css}\n{base_styles}");
     let font_styles = font.stylesheet();
     if !font_styles.is_empty() {
         styles.push('\n');
@@ -64,17 +75,28 @@ pub(crate) fn render_shell(
         ("body", &body),
     ];
 
-    Ok(substitute(&values))
+    let template = if has_terms {
+        std::borrow::Cow::Borrowed(TEMPLATE)
+    } else {
+        let (before, script) = TEMPLATE
+            .split_once(TERMS_SCRIPT_START)
+            .expect("template has glossary script marker");
+        let (_, after) = script
+            .split_once(TERMS_SCRIPT_END)
+            .expect("template has glossary script end marker");
+        std::borrow::Cow::Owned(format!("{before}{after}"))
+    };
+    Ok(substitute(&template, &values))
 }
 
-fn substitute(values: &[(&str, &str)]) -> String {
+fn substitute(template: &str, values: &[(&str, &str)]) -> String {
     let mut result = String::new();
     let mut cursor = 0;
-    for captures in PLACEHOLDER.captures_iter(TEMPLATE) {
+    for captures in PLACEHOLDER.captures_iter(template) {
         let placeholder = captures
             .get(0)
             .expect("regex matches include the whole match");
-        result.push_str(&TEMPLATE[cursor..placeholder.start()]);
+        result.push_str(&template[cursor..placeholder.start()]);
         let replacement = captures.get(1).map_or("$", |name| {
             values
                 .iter()
@@ -84,7 +106,7 @@ fn substitute(values: &[(&str, &str)]) -> String {
         result.push_str(replacement);
         cursor = placeholder.end();
     }
-    result.push_str(&TEMPLATE[cursor..]);
+    result.push_str(&template[cursor..]);
     result
 }
 
@@ -197,6 +219,7 @@ mod tests {
             "tr",
             "",
             &PageOptions::default(),
+            false,
         )
     }
 

@@ -119,6 +119,46 @@ Hidden explanation.
 ::::
 ```
 
+## Glossary terms
+
+Define unfamiliar terms once in a `:::terms` block. It can appear anywhere in the
+body; placing it at the end keeps definitions together. The block itself has no
+visible output.
+
+```markdown
+BREX checks project rules. A crate provides reusable Rust code.
+
+:::terms
+- **BREX:** Business Rules Exchange: the project's own S1000D rules.
+- **Crate:** A Rust library package, such as `serde`.
+:::
+```
+
+Each item must be one line in the form `- **Term:** definition`. Definitions
+support inline Markdown, including emphasis, code, and links. Use at most one
+terms block per page and define each term once. Malformed items, duplicate terms,
+and a second block stop conversion with the original source line number. An
+unused term produces a warning on stderr; the page is still written.
+
+The first occurrence of each term is marked with a dotted underline in each
+`##` section, including the content before the first `##`. Matching includes
+paragraphs, lists, table cells, callouts, toggle bodies, and blockquotes. Headings,
+toggle titles, code, links, raw HTML, figures/SVG, frontmatter, and the glossary
+itself are excluded.
+
+Terms match their written spelling. When the second letter is lowercase, the
+first letter can also be lowercase: `Crate` matches `crate'leri`. Turkish casing
+is respected (`İ` → `i`, `I` → `ı`); acronyms remain case-sensitive. Turkish
+suffixes stay inside the marked word, including `BREX'e`, `XSD’nin`, and
+`veri modülünü`. A preceding letter or digit prevents a match. When terms
+overlap, the longer term wins.
+
+Click or tap a marked word to open its definition; press Esc or click outside to
+close it. Tab followed by Enter also opens the card. Only one card stays open.
+Cards follow the page's light or dark theme and fit phone screens. Native browser
+popovers still work without JavaScript, with the card centered instead of next to
+the word. Archive and restore preserve the original terms block exactly.
+
 ## Media
 
 | Asset | Embedded? | Notes |

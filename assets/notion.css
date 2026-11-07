@@ -398,3 +398,42 @@ body {
 @media print {
   .page { padding-bottom: 0; }
 }
+/* terms:start */
+.term {
+  appearance: none;
+  display: inline;
+  padding: 0;
+  border: 0;
+  border-radius: 2px;
+  background: none;
+  color: inherit;
+  font: inherit;
+  line-height: inherit;
+  cursor: pointer;
+  text-decoration-line: underline;
+  text-decoration-style: dotted;
+  text-decoration-color: var(--text-soft);
+  text-decoration-thickness: 1px;
+  text-underline-offset: .22em;
+}
+.term:hover { text-decoration-color: var(--link); }
+.term:focus-visible { outline: 2px solid var(--link); outline-offset: 3px; }
+.term-card {
+  box-sizing: border-box;
+  width: max-content;
+  max-width: min(360px, 92vw);
+  max-height: calc(100dvh - 16px);
+  overflow: auto;
+  overflow-wrap: anywhere;
+  padding: 16px 20px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  font-size: 14px;
+  line-height: 1.65;
+  box-shadow: 0 12px 40px rgb(0 0 0 / 18%);
+}
+.term-card > strong:first-child { display: block; margin-bottom: 6px; font-size: 15px; }
+.term-card a { color: var(--link); }

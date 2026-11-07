@@ -31,6 +31,12 @@ notion-page notes.md
 
 Open `notes.html`.
 
+Define unfamiliar vocabulary once with a `:::terms` block. Each section's first
+prose occurrence becomes a dotted word that opens a definition card by click,
+tap, or keyboard. Definitions support inline Markdown; cards work offline in
+light and dark themes. See the [glossary syntax](skill/notion-page/references/writing.md#glossary-terms)
+and [showcase](skill/notion-page/templates/showcase.md).
+
 The default `daily-dose` typography uses Noto Serif for text and Domine for
 headings, inspired by Daily Dose of Data Science. Fonts are embedded in the
 HTML and work offline. Use the previous system font appearance with:

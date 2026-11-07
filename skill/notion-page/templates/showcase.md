@@ -138,6 +138,21 @@ These lines do not open a container.
 :::
 ```
 
+## Glossary terms
+
+BREX checks a project's S1000D rules, while XSD describes an XML document's
+structure. A crate packages reusable Rust code. Click a dotted word to read its
+definition, or reach it with Tab and press Enter. Press Esc to close the card.
+
+BREX appears again here without another underline because only its first use in
+this section is marked.
+
 Footnotes are supported too.[^1]
 
 [^1]: Footnotes are collected at the bottom of the page.
+
+:::terms
+- **BREX:** Business Rules Exchange: a project's own **S1000D rules**.
+- **XSD:** XML Schema Definition: a schema for the structure of an XML document.
+- **Crate:** A Rust library package, such as `serde`. See the [Rust guide](https://doc.rust-lang.org/book/ch07-01-packages-and-crates.html).
+:::

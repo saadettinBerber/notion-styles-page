@@ -22,5 +22,46 @@ $cover
 $body
   </article>
 </main>
+<!-- terms-script:start -->
+<script>
+(() => {
+  let activeButton;
+  const place = (card, button) => {
+    const gap = 8;
+    const width = document.documentElement.clientWidth;
+    const height = window.innerHeight;
+    card.style.margin = '0';
+    card.style.inset = 'auto';
+    const word = button.getBoundingClientRect();
+    const box = card.getBoundingClientRect();
+    const left = Math.max(gap, Math.min(word.left, width - box.width - gap));
+    const top = word.bottom + gap + box.height <= height - gap
+      ? word.bottom + gap : word.top - box.height - gap;
+    card.style.left = left + 'px';
+    card.style.top = Math.max(gap, Math.min(top, height - box.height - gap)) + 'px';
+  };
+  const reposition = () => {
+    if (!activeButton || !activeButton.isConnected) return;
+    const card = document.getElementById(activeButton.getAttribute('popovertarget'));
+    if (card && card.matches(':popover-open')) place(card, activeButton);
+  };
+  document.addEventListener('click', event => {
+    if (!(event.target instanceof Element)) return;
+    const button = event.target.closest('button.term[popovertarget]');
+    if (button) {
+      activeButton = button;
+      requestAnimationFrame(reposition);
+    }
+  });
+  document.addEventListener('toggle', event => {
+    if (event.target.classList?.contains('term-card') && event.newState === 'open') {
+      requestAnimationFrame(reposition);
+    }
+  }, true);
+  window.addEventListener('resize', reposition);
+  document.addEventListener('scroll', reposition, true);
+})();
+</script>
+<!-- terms-script:end -->
 </body>
 </html>

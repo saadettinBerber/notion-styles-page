@@ -34,16 +34,21 @@ Range `start` and `end` values are Unicode code-point indices into the original 
 - `topic` contains frontmatter metadata; `header_fields` contains field names and original value ranges. Headerless fragments have `topic=None`.
 - `blocks` contains kind, range, shape signature, shareability, and children. Toggle headings expose `title` and `title_range`.
 - `image_destinations` contains resolved image targets and ranges; `container_uses` contains Notion containers and ranges.
+- `glossary_terms` contains each `:::terms` entry's `term`, original inline Markdown `definition`, and `source_range` for its list item. It is empty when no glossary is present. The block appears in `container_uses` as `terms` and in `blocks` as `container:terms`, with `glossary_term` children.
 - `protected_ranges` identifies code, link targets, and similar protected spans. `plain_text` is the text query.
 - `formatting` contains `content_text`, `code_signatures` with original code bytes, `raw_html_ranges`, and `container_titles`.
 
-Invalid YAML and unknown or unclosed containers raise Python `ValueError`. Container errors include the original line number.
+Invalid YAML and unknown or unclosed containers raise Python `ValueError`. Container errors include the original line number. Malformed glossary entries, duplicate terms, and multiple terms blocks also raise `ValueError` with the original source line. Preparation validates the glossary without reading media.
 
 ## HTML and media
 
 `rendered.html` is the HTML body. `rendered.render_nodes` exposes the render tree for operations such as bilingual layouts. Leaves provide `html`, `shared`, and `inline`; branches provide opening and closing HTML and children. Footnote branches also include identity and order data.
 
-`id_prefix` separates generated heading and footnote IDs for documents embedded in one page. For example, `en-` produces `fn-en--1` for the first footnote. `MarkdownReader(media, allow_raw_html=False)` escapes raw HTML as text. Source coordinates do not depend on rendering options.
+`id_prefix` separates generated heading, footnote, and glossary IDs for documents embedded in one page. For example, `en-` produces `fn-en--1` for the first footnote and `en-term-brex` for the BREX card. Glossary slugs are ASCII with Turkish letters folded and avoid heading ID collisions. `MarkdownReader(media, allow_raw_html=False)` escapes raw HTML as text. Source coordinates do not depend on rendering options.
+
+The terms block emits no HTML at its source position. Marked words link to native popover cards appended at the end of `rendered.html`; the cards are also represented in `render_nodes`, so assembling the tree reproduces the body. The [writing guide](writing.md#glossary-terms) describes section boundaries, suffix matching, and excluded content. Passing the body to `load_page_template().render()` includes the card styles and positioning script only when needed.
+
+When a term has no eligible occurrence, `rendered.warnings` contains its warning. The field is omitted from the Python result when there are no warnings. Library rendering does not write to stderr; CLI conversion reports warnings and still writes the page. Rust page callers can use `render_page_with_diagnostics(page, media, options)` to receive `RenderedPage { html, warnings }`; existing `render_page` and `render_page_with_options` continue to return HTML strings.
 
 Opt into embedding body images with `prepared.render(embed_images=media.embedded_image_data_uri)`. The callback receives the resolved destination, which is preserved in `data-source`. The Rust media layer validates regular PNG, JPEG, GIF, and WebP bytes, including every animation frame. `MediaFolder` rejects symlinks, absolute paths, and parent traversal. `inspect_image(content)` performs the same validation without reading files and returns `ImageInfo(media_type, width, height)`. The caller decides whether media access is permitted.
 

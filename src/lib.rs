@@ -40,6 +40,7 @@ pub fn render_shell_with_options(
         lang,
         extra_css,
         options,
+        body_html.contains("class=\"term-card\" popover"),
     )
 }
 
@@ -51,6 +52,12 @@ pub const fn writing_guide() -> &'static str {
 pub struct PreparedPage {
     topic: topic::Topic,
     markdown: markdown::PreparedMarkdown,
+}
+
+/// A complete page and non-fatal conversion diagnostics.
+pub struct RenderedPage {
+    pub html: String,
+    pub warnings: Vec<String>,
 }
 
 #[derive(Debug)]
@@ -73,6 +80,7 @@ impl std::error::Error for PageError {}
 pub fn prepare_page(source: &str) -> Result<PreparedPage, PageError> {
     let (topic, body) = topic::Topic::parse(source)?;
     let markdown = markdown::prepare(body);
+    markdown::validate_terms(&markdown, source, source.len() - body.len())?;
     Ok(PreparedPage { topic, markdown })
 }
 
@@ -87,13 +95,27 @@ pub fn render_page_with_options(
     media: &impl MediaSource,
     options: &PageOptions,
 ) -> Result<String, PageError> {
-    let body = markdown::render(&page.markdown, media)?;
-    page::render_shell(
+    Ok(render_page_with_diagnostics(page, media, options)?.html)
+}
+
+/// Render a page and return warnings without writing to stderr.
+pub fn render_page_with_diagnostics(
+    page: &PreparedPage,
+    media: &impl MediaSource,
+    options: &PageOptions,
+) -> Result<RenderedPage, PageError> {
+    let body = markdown::render_with_warnings(&page.markdown, media)?;
+    let html = page::render_shell(
         &page.topic,
-        &body,
+        &body.html,
         markdown::code_styles_css(),
         "tr",
         "",
         options,
-    )
+        markdown::has_terms(&page.markdown),
+    )?;
+    Ok(RenderedPage {
+        html,
+        warnings: body.warnings,
+    })
 }
