@@ -14,7 +14,25 @@ impl Fixture {
             _directory: directory,
             root,
         };
-        fixture.write(TEMPLATE, include_str!("generate-skill.template.md"));
+        fixture.write(
+            OUTPUTS[0].template,
+            include_str!("generate-skill.template.md"),
+        );
+        fixture.write(
+            OUTPUTS[1].template,
+            include_str!("verified-notes.template.md"),
+        );
+        for (folder, body) in [
+            ("simple", "Shared clarity."),
+            ("turkish-writing", "Türkçe açıklama."),
+            ("notion-page", "Convert the page."),
+        ] {
+            fixture.skill(folder, folder, body);
+        }
+        fixture.write(
+            OUTPUTS[1].references[0],
+            "## Reviewer prompt template\n\nIndependent review.",
+        );
         fixture
     }
 
@@ -32,275 +50,248 @@ impl Fixture {
         )
     }
 
-    fn source_skill(&self, source: &str) -> PathBuf {
-        self.write(
-            "skill/example/SKILL.md",
-            &format!("---\nname: example\ndescription: Use for examples.\nmetadata:\n  source: {source}\n---\nRead the guide through the CLI.\n"),
-        )
+    fn generate(&self, index: usize) -> String {
+        generate(&self.root, &OUTPUTS[index]).unwrap()
+    }
+
+    fn update(&self, check: bool) -> Result<bool> {
+        update(&self.root, OUTPUTS, check)
     }
 }
 
 #[test]
-fn discovers_added_updated_and_deleted_skills_without_configuration() {
+fn generates_separate_workflows_from_explicit_shared_sources() {
     let fixture = Fixture::new();
-    fixture.skill("example", "example", "Keep the context.");
-    let before = generate(&fixture.root).unwrap();
-    let path = fixture.skill("nested/new-skill", "new-skill", "New guidance.");
-    assert!(generate(&fixture.root).unwrap().contains("New guidance."));
-    fixture.skill("nested/new-skill", "new-skill", "Changed guidance.");
-    let changed = generate(&fixture.root).unwrap();
-    assert!(changed.contains("Changed guidance."));
-    assert!(!changed.contains("New guidance."));
-    fs::remove_file(path).unwrap();
-    assert_eq!(before, generate(&fixture.root).unwrap());
-}
-
-#[test]
-fn excludes_generated_subtree_and_does_not_rewrite_identical_output() {
-    let fixture = Fixture::new();
-    fixture.skill("example", "example", "Keep the context.");
-    assert!(update(&fixture.root, false).unwrap());
-    let output = fixture.root.join(OUTPUT);
-    let before = fs::read(&output).unwrap();
-    let modified = fs::metadata(&output).unwrap().modified().unwrap();
-    fixture.write(
-        "skill/generate-notion-styles/nested/SKILL.md",
-        "Invalid output metadata",
-    );
-    assert!(!update(&fixture.root, false).unwrap());
-    assert!(!update(&fixture.root, true).unwrap());
-    assert_eq!(before, fs::read(&output).unwrap());
-    assert_eq!(modified, fs::metadata(&output).unwrap().modified().unwrap());
-    assert_eq!(
-        read_document(&output, true).unwrap().0["name"].as_str(),
-        Some("generate-notion-styles")
-    );
-}
-
-#[test]
-fn check_reports_missing_and_stale_output_without_writing() {
-    let fixture = Fixture::new();
-    fixture.skill("example", "example", "Keep the context.");
-    let output = fixture.root.join(OUTPUT);
-    assert!(
-        update(&fixture.root, true)
-            .unwrap_err()
-            .to_string()
-            .contains("is stale")
-    );
-    assert!(!output.exists());
-    assert!(!output.parent().unwrap().exists());
-    assert!(update(&fixture.root, false).unwrap());
-    let previous = fs::read(&output).unwrap();
-    fixture.skill("example", "example", "An added rule.");
-    assert!(update(&fixture.root, true).is_err());
-    assert_eq!(previous, fs::read(output).unwrap());
-}
-
-#[test]
-fn expands_metadata_source_and_tracks_guide_edits_and_removal() {
-    let fixture = Fixture::new();
-    fixture.source_skill("../guide.md");
-    let guide = fixture.write("skill/guide.md", "---\nname: example\n---\nActual rules.");
-    let output = generate(&fixture.root).unwrap();
-    assert!(output.contains("Actual rules."));
-    assert!(!output.contains("Read the guide through the CLI."));
-    fixture.write("skill/guide.md", "Updated rules without frontmatter.");
-    assert!(
-        generate(&fixture.root)
+    fixture.skill("unrelated", "unrelated", "Do not include this workflow.");
+    let page = fixture.generate(0);
+    let verified = fixture.generate(1);
+    for output in [&page, &verified] {
+        assert!(output.contains("Shared clarity."));
+        assert!(output.contains("Türkçe açıklama."));
+        assert!(output.contains("Convert the page."));
+        assert!(!output.contains("Do not include this workflow."));
+    }
+    assert!(!page.contains("Independent review."));
+    assert!(!page.contains("## 1. Reopen the primary sources"));
+    assert!(verified.contains("Independent review."));
+    assert!(verified.contains("## 1. Reopen the primary sources"));
+    fixture.update(false).unwrap();
+    for spec in OUTPUTS {
+        let expected_name = read_document(&fixture.root.join(spec.template), true)
             .unwrap()
-            .contains("Updated rules without frontmatter.")
-    );
-    fs::remove_file(guide).unwrap();
-    assert!(generate(&fixture.root).is_err());
+            .0["name"]
+            .clone();
+        assert_eq!(
+            read_document(&fixture.root.join(spec.output), true)
+                .unwrap()
+                .0["name"],
+            expected_name
+        );
+    }
 }
 
 #[test]
-fn preserves_multiline_yaml_descriptions_unicode_and_crlf_documents() {
+fn shared_edits_update_both_outputs_and_reviewer_edits_update_only_verified_notes() {
     let fixture = Fixture::new();
-    fixture.write("skill/example/SKILL.md", "---\r\nname: example\r\ndescription: >\r\n  Apply to instructions:\r\n  preserve their meaning.\r\n---\r\nTürkçe açıklamayı koru.\r\n");
-    let output = generate(&fixture.root).unwrap();
-    assert!(output.contains("Apply to instructions: preserve their meaning."));
-    assert!(output.contains("Türkçe açıklamayı koru."));
-    assert!(!output.contains('\r'));
+    fixture.update(false).unwrap();
+    let page = fixture.generate(0);
+    fixture.write(OUTPUTS[1].references[0], "Updated reviewer prompt.");
+    assert_eq!(page, fixture.generate(0));
+    assert!(fixture.generate(1).contains("Updated reviewer prompt."));
+    assert!(fixture.update(true).is_err());
+    fixture.skill("simple", "simple", "Changed shared guidance.");
+    assert!(fixture.update(false).unwrap());
+    for spec in OUTPUTS {
+        assert!(
+            read_text(&fixture.root.join(spec.output))
+                .unwrap()
+                .contains("Changed shared guidance.")
+        );
+    }
+    assert!(!fixture.update(true).unwrap());
 }
 
 #[test]
-fn normalizes_template_and_source_line_endings_without_rewriting_equivalent_output() {
+fn missing_and_stale_outputs_are_reported_without_writing() {
     let fixture = Fixture::new();
-    fixture.source_skill("../guide.md");
-    fixture.write("skill/guide.md", "First line.\n\nSecond line.");
-    let expected = generate(&fixture.root).unwrap();
-    fixture.write(
-        TEMPLATE,
-        &include_str!("generate-skill.template.md").replace('\n', "\r\n"),
-    );
-    fixture.write("skill/guide.md", "First line.\r\rSecond line.");
-    assert_eq!(expected, generate(&fixture.root).unwrap());
-    let crlf = expected.replace('\n', "\r\n");
-    fixture.write(OUTPUT, &crlf);
-    assert!(!update(&fixture.root, true).unwrap());
-    assert!(!update(&fixture.root, false).unwrap());
-    assert_eq!(crlf, fs::read_to_string(fixture.root.join(OUTPUT)).unwrap());
+    let error = fixture.update(true).unwrap_err().to_string();
+    for spec in OUTPUTS {
+        assert!(error.contains(spec.output));
+        assert!(!fixture.root.join(spec.output).exists());
+    }
+    fixture.update(false).unwrap();
+    let old = fs::read(fixture.root.join(OUTPUTS[1].output)).unwrap();
+    fixture.write(OUTPUTS[1].references[0], "Changed review.");
+    let error = fixture.update(true).unwrap_err().to_string();
+    assert!(error.contains(OUTPUTS[1].output));
+    assert!(!error.contains(OUTPUTS[0].output));
+    assert_eq!(old, fs::read(fixture.root.join(OUTPUTS[1].output)).unwrap());
 }
 
 #[test]
-fn rejects_duplicate_names_including_the_generated_skill_name() {
+fn unchanged_outputs_are_not_rewritten_and_line_endings_are_normalized() {
     let fixture = Fixture::new();
-    fixture.skill("example", "example", "Rules.");
-    let duplicate = fixture.skill("duplicate", "example", "Other rules.");
-    assert!(
-        generate(&fixture.root)
-            .unwrap_err()
-            .to_string()
-            .contains("duplicate skill name")
-    );
-    fs::remove_file(duplicate).unwrap();
-    fixture.skill("collision", "generate-notion-styles", "Rules.");
-    assert!(
-        generate(&fixture.root)
-            .unwrap_err()
-            .to_string()
-            .contains("duplicate skill name")
-    );
+    fixture.update(false).unwrap();
+    for spec in OUTPUTS {
+        let output = fixture.root.join(spec.output);
+        let crlf = read_text(&output).unwrap().replace('\n', "\r\n");
+        fixture.write(spec.output, &crlf);
+        let modified = fs::metadata(&output).unwrap().modified().unwrap();
+        let template = read_text(&fixture.root.join(spec.template)).unwrap();
+        fixture.write(spec.template, &template.replace('\n', "\r\n"));
+        assert!(!fixture.update(true).unwrap());
+        assert!(!fixture.update(false).unwrap());
+        assert_eq!(modified, fs::metadata(&output).unwrap().modified().unwrap());
+        assert_eq!(crlf, fs::read_to_string(output).unwrap());
+    }
 }
 
 #[test]
-fn rejects_missing_malformed_or_invalid_metadata_without_creating_output() {
+fn validates_all_inputs_before_replacing_either_output() {
+    let fixture = Fixture::new();
+    fixture.update(false).unwrap();
+    let before: Vec<_> = OUTPUTS
+        .iter()
+        .map(|spec| fs::read(fixture.root.join(spec.output)).unwrap())
+        .collect();
+    fixture.skill("simple", "simple", "Pending shared change.");
+    fs::remove_file(fixture.root.join(OUTPUTS[1].references[0])).unwrap();
+    assert!(fixture.update(false).is_err());
+    for (spec, bytes) in OUTPUTS.iter().zip(before) {
+        assert_eq!(bytes, fs::read(fixture.root.join(spec.output)).unwrap());
+    }
+}
+
+#[test]
+fn rejects_missing_malformed_empty_and_duplicate_sources() {
     let fixture = Fixture::new();
     for invalid in [
         "Missing frontmatter",
-        "---\nname: example",
+        "---\nname: simple",
         "---\n- not-a-mapping\n---\nRule.",
-        "---\nname: example\n---\nRule.",
+        "---\nname: simple\n---\nRule.",
         "---\nname: []\ndescription: Example\n---\nRule.",
         "---\nname: INVALID\ndescription: Example\n---\nRule.",
-        "---\nname: example\ndescription: ''\n---\nRule.",
-        "---\nname: example\ndescription: [oops\n---\nRule.",
-        "---\nname: example\ndescription: Example\nmetadata: []\n---\nRule.",
-        "---\nname: example\ndescription: Example\nmetadata:\n  source: []\n---\nRule.",
-        "---\nname: example\ndescription: Example\nmetadata:\n  source: ''\n---\nRule.",
-        "---\nname: example\ndescription: Example\n---\n  ",
+        "---\nname: simple\ndescription: ''\n---\nRule.",
+        "---\nname: simple\ndescription: [oops\n---\nRule.",
+        "---\nname: simple\ndescription: Example\nmetadata: []\n---\nRule.",
+        "---\nname: simple\ndescription: Example\nmetadata:\n  source: []\n---\nRule.",
+        "---\nname: simple\ndescription: Example\n---\n  ",
     ] {
-        fixture.write("skill/example/SKILL.md", invalid);
-        assert!(
-            update(&fixture.root, false).is_err(),
-            "accepted {invalid:?}"
-        );
-        assert!(!fixture.root.join(OUTPUT).exists());
+        fixture.write("skill/simple/SKILL.md", invalid);
+        assert!(fixture.update(false).is_err(), "accepted {invalid:?}");
+        assert!(!fixture.root.join(OUTPUTS[0].output).exists());
     }
+    for name in ["notion-page", "generate-notion-styles", "verified-notes"] {
+        fixture.skill("simple", name, "Rules.");
+        assert!(
+            fixture
+                .update(false)
+                .unwrap_err()
+                .to_string()
+                .contains("duplicate skill name")
+        );
+    }
+    fs::remove_file(fixture.root.join("skill/simple/SKILL.md")).unwrap();
+    assert!(fixture.update(false).is_err());
 }
 
 #[test]
-fn rejects_sources_outside_skill_tree_and_self_references() {
+fn resolves_metadata_sources_and_rejects_self_generated_or_outside_sources() {
     let fixture = Fixture::new();
+    let source_skill = |source: &str| {
+        fixture.write(
+            "skill/simple/SKILL.md",
+            &format!(
+                "---\nname: simple\ndescription: Example\nmetadata:\n  source: {source}\n---\nStub."
+            ),
+        );
+    };
+    source_skill("../guide.md");
+    fixture.write("skill/guide.md", "Actual source guidance.");
+    assert!(fixture.generate(0).contains("Actual source guidance."));
+    fixture.write("skill/guide.md", "---\nname: wrong\n---\nWrong source.");
+    assert!(fixture.update(false).is_err());
     for source in [
         "../../outside.md",
         "../generate-notion-styles/SKILL.md",
+        "../verified-notes/SKILL.md",
         "SKILL.md",
     ] {
-        fixture.source_skill(source);
-        assert!(generate(&fixture.root).is_err(), "accepted {source}");
+        source_skill(source);
+        assert!(fixture.update(false).is_err(), "accepted {source}");
     }
 }
 
 #[test]
-fn makes_relative_links_portable_and_preserves_code_examples() {
+fn preserves_yaml_unicode_and_portable_links_without_rewriting_code() {
     let fixture = Fixture::new();
-    fixture.skill("example", "example", "# Rules\n[Other](../other.md#notes)\n[Online](https://example.com/a)\n[Ref]: ../other.md\n`[Code](../other.md)`\n```markdown\n# Heading example\n[Code](../other.md)\n```\n");
-    let output = generate(&fixture.root).unwrap();
-    assert!(output.contains("/blob/main/skill/other.md#notes)"));
-    assert!(output.contains("[Ref]: https://github.com/"));
-    assert!(output.contains("[Online](https://example.com/a)"));
-    assert!(output.contains("`[Code](../other.md)`"));
-    assert!(output.contains("```markdown\n# Heading example\n[Code](../other.md)\n```"));
-    assert!(output.contains("### Rules"));
-}
-
-#[test]
-fn preserves_url_queries_fragments_and_external_schemes_and_encodes_paths() {
-    let fixture = Fixture::new();
-    fixture.skill("türkçe", "example", "[Guide](../çizim.md?q=1#şekil)\n[Anchor](#local)\n[Mail](mailto:hello@example.com)\n[CDN](//example.com/a)\n[Data](data:text/plain,example)");
-    let output = generate(&fixture.root).unwrap();
-    assert!(output.contains("/skill/t%C3%BCrk%C3%A7e/SKILL.md)"));
-    assert!(output.contains("/skill/%C3%A7izim.md?q=1#şekil)"));
-    for link in [
-        "[Anchor](#local)",
+    fixture.write("skill/simple/SKILL.md", "---\r\nname: simple\r\ndescription: >\r\n  Apply to instructions:\r\n  preserve their meaning.\r\n---\r\n# Rules\r\nTürkçe açıklama.\r\n[Guide](../çizim.md?q=1#şekil)\r\n[Ref]: ../other.md\r\n[Mail](mailto:hello@example.com)\r\n[Anchor](#local)\r\n`[Code](../other.md)`\r\n```markdown\r\n# Heading example\r\n[Code](../other.md)\r\n```\r\n");
+    let output = fixture.generate(0);
+    for expected in [
+        "Apply to instructions: preserve their meaning.",
+        "Türkçe açıklama.",
+        "### Rules",
+        "/skill/%C3%A7izim.md?q=1#şekil)",
+        "[Ref]: https://github.com/",
         "[Mail](mailto:hello@example.com)",
-        "[CDN](//example.com/a)",
-        "[Data](data:text/plain,example)",
+        "[Anchor](#local)",
+        "`[Code](../other.md)`",
+        "```markdown\n# Heading example\n[Code](../other.md)\n```",
     ] {
-        assert!(output.contains(link));
+        assert!(output.contains(expected), "missing {expected}");
     }
+    assert!(!output.contains('\r'));
+    assert!(output.find("## notion-page").unwrap() < output.find("## simple").unwrap());
+    fixture.skill("simple", "simple", "[Outside](../../../outside.md)");
+    assert!(fixture.update(false).is_err());
 }
 
 #[test]
-fn orders_sections_by_metadata_name_instead_of_folder_name() {
+fn rejects_generated_inputs_empty_source_lists_and_empty_references() {
     let fixture = Fixture::new();
-    fixture.skill("first", "zebra", "Last.");
-    fixture.skill("last", "alpha", "First.");
-    let output = generate(&fixture.root).unwrap();
-    assert!(output.find("## alpha").unwrap() < output.find("## zebra").unwrap());
-}
-
-#[test]
-fn keeps_existing_output_when_source_validation_fails() {
-    let fixture = Fixture::new();
-    fixture.skill("example", "example", "Rules.");
-    update(&fixture.root, false).unwrap();
-    let output = fixture.root.join(OUTPUT);
-    let before = fs::read(&output).unwrap();
-    fixture.write("skill/example/SKILL.md", "Invalid metadata");
-    assert!(update(&fixture.root, false).is_err());
-    assert_eq!(before, fs::read(output).unwrap());
-}
-
-#[test]
-fn requires_source_skill_names_to_match_discoverable_names() {
-    let fixture = Fixture::new();
-    fixture.source_skill("../guide.md");
-    fixture.write("skill/guide.md", "---\nname: wrong-guide\n---\nRules.");
+    fixture.update(false).unwrap();
+    let mut spec = SkillOutput {
+        output: "skill/example/SKILL.md",
+        template: OUTPUTS[0].template,
+        sources: &["skill/verified-notes/SKILL.md"],
+        references: &[],
+    };
+    assert!(generate(&fixture.root, &spec).is_err());
+    spec.sources = &[];
     assert!(
-        generate(&fixture.root)
-            .unwrap_err()
-            .to_string()
-            .contains("source skill name does not match")
-    );
-}
-
-#[test]
-fn rejects_empty_skill_trees_and_links_outside_repository() {
-    let fixture = Fixture::new();
-    assert!(
-        generate(&fixture.root)
+        generate(&fixture.root, &spec)
             .unwrap_err()
             .to_string()
             .contains("No source skills")
     );
-    fixture.skill("example", "example", "[Outside](../../../outside.md)");
-    assert!(generate(&fixture.root).is_err());
+    fixture.write(OUTPUTS[1].references[0], "  ");
+    assert!(fixture.update(false).is_err());
 }
 
 #[cfg(unix)]
 #[test]
 fn rejects_symlinks_that_escape_source_and_repository_roots() {
     use std::os::unix::fs::symlink;
-
     let fixture = Fixture::new();
     let outside = tempdir().unwrap();
     fs::write(outside.path().join("guide.md"), "Outside rules.").unwrap();
-    fixture.source_skill("../linked/guide.md");
     symlink(outside.path(), fixture.root.join("skill/linked")).unwrap();
-    assert!(generate(&fixture.root).is_err());
-
-    fixture.skill("example", "example", "[Outside](../linked/guide.md)");
-    assert!(generate(&fixture.root).is_err());
-
-    fs::remove_file(fixture.root.join("skill/example/SKILL.md")).unwrap();
+    fixture.skill("simple", "simple", "[Outside](../linked/guide.md)");
+    assert!(fixture.update(false).is_err());
+    fixture.skill("simple", "simple", "Shared rules.");
+    fs::remove_file(fixture.root.join(OUTPUTS[1].references[0])).unwrap();
     symlink(
         outside.path().join("guide.md"),
-        fixture.root.join("skill/example/SKILL.md"),
+        fixture.root.join(OUTPUTS[1].references[0]),
     )
     .unwrap();
-    assert!(generate(&fixture.root).is_err());
+    assert!(fixture.update(false).is_err());
+    fs::remove_file(fixture.root.join("skill/simple/SKILL.md")).unwrap();
+    symlink(
+        outside.path().join("guide.md"),
+        fixture.root.join("skill/simple/SKILL.md"),
+    )
+    .unwrap();
+    assert!(fixture.update(false).is_err());
 }

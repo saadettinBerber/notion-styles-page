@@ -16,6 +16,12 @@ pub(super) enum Skill {
     #[value(help = "Write natural Turkish notes with consistent terminology and correct spelling.")]
     TurkishWriting,
     #[value(
+        help = "Write source-based notes, independently review them, and render verified HTML."
+    )]
+    VerifiedNotes,
+    #[value(help = "Print the read-only source review prompt template.")]
+    VerifiedNotesReviewer,
+    #[value(
         alias = "yazim",
         help = "Explain frontmatter, Markdown syntax, and custom blocks."
     )]
@@ -44,6 +50,10 @@ impl Skill {
             Self::NotionPage => include_str!("../../skill/notion-page/SKILL.md"),
             Self::Simple => include_str!("../../skill/simple/SKILL.md"),
             Self::TurkishWriting => include_str!("../../skill/turkish-writing/SKILL.md"),
+            Self::VerifiedNotes => include_str!("../../skill/verified-notes/SKILL.md"),
+            Self::VerifiedNotesReviewer => {
+                include_str!("../../skill/verified-notes/references/reviewer.md")
+            }
             Self::Writing => notion_sayfa::writing_guide(),
             Self::Drawing => include_str!("../../skill/notion-page/references/drawing.md"),
             Self::Showcase => include_str!("../../skill/notion-page/templates/showcase.md"),

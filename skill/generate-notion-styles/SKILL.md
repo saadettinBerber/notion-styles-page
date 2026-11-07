@@ -15,6 +15,9 @@ For page creation, follow the included conversion instructions and consult
 `notion-page --help` for CLI options. Give the page enough context for its intended
 reader, then check the rendered HTML before sharing it.
 
+For source-based notes that need an independent factual review, use the separate
+`verified-notes` skill. That workflow is not required for ordinary page creation.
+
 ## notion-page
 
 Convert Markdown notes into a standalone, offline Notion-style HTML page using the notion-page CLI.

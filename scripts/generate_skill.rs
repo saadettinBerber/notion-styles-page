@@ -1,4 +1,4 @@
-//! Compose the installable skill from discovered skill metadata and bodies.
+//! Compose independent installable skills from explicitly selected sources.
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::error::Error;
@@ -13,8 +13,32 @@ use percent_encoding::{AsciiSet, NON_ALPHANUMERIC, utf8_percent_encode};
 use regex::Regex;
 use serde_yaml_ng::{Mapping, Value};
 
-const OUTPUT: &str = "skill/generate-notion-styles/SKILL.md";
-const TEMPLATE: &str = "scripts/generate-skill.template.md";
+struct SkillOutput {
+    output: &'static str,
+    template: &'static str,
+    sources: &'static [&'static str],
+    references: &'static [&'static str],
+}
+
+const SHARED_SOURCES: &[&str] = &[
+    "skill/simple/SKILL.md",
+    "skill/turkish-writing/SKILL.md",
+    "skill/notion-page/SKILL.md",
+];
+const OUTPUTS: &[SkillOutput] = &[
+    SkillOutput {
+        output: "skill/generate-notion-styles/SKILL.md",
+        template: "scripts/generate-skill.template.md",
+        sources: SHARED_SOURCES,
+        references: &[],
+    },
+    SkillOutput {
+        output: "skill/verified-notes/SKILL.md",
+        template: "scripts/verified-notes.template.md",
+        sources: SHARED_SOURCES,
+        references: &["skill/verified-notes/references/reviewer.md"],
+    },
+];
 const SOURCE_URL: &str = "https://github.com/saadettinBerber/notion-styles-page/blob/main/";
 const PATH_ENCODING: &AsciiSet = &NON_ALPHANUMERIC
     .remove(b'/')
@@ -38,17 +62,21 @@ static HEADING: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"^(#{1,4}) ").unw
 type Result<T> = std::result::Result<T, Box<dyn Error>>;
 
 #[derive(Parser)]
-#[command(about = "Compose the installable skill from discovered skill metadata and bodies.")]
+#[command(about = "Compose all installable skills from explicitly selected sources.")]
 struct Args {
-    /// Fail if the generated file is missing or stale; do not write.
+    /// Fail if any generated file is missing or stale; do not write.
     #[arg(long)]
     check: bool,
 }
 
 fn main() -> ExitCode {
-    match update(Path::new(env!("CARGO_MANIFEST_DIR")), Args::parse().check) {
-        Ok(true) => println!("Generated {OUTPUT}"),
-        Ok(false) => println!("{OUTPUT} is up to date"),
+    match update(
+        Path::new(env!("CARGO_MANIFEST_DIR")),
+        OUTPUTS,
+        Args::parse().check,
+    ) {
+        Ok(true) => println!("Generated skill files updated"),
+        Ok(false) => println!("All generated skill files are up to date"),
         Err(error) => {
             eprintln!("{error}");
             return ExitCode::FAILURE;
@@ -221,37 +249,23 @@ fn portable_body(body: &str, source: &Path, root: &Path) -> Result<String> {
     Ok(output.join("\n"))
 }
 
-fn discover(directory: &Path, output: &Path, paths: &mut Vec<PathBuf>) -> Result<()> {
-    for entry in fs::read_dir(directory)? {
-        let entry = entry?;
-        let path = entry.path();
-        if path.starts_with(output) {
-            continue;
-        }
-        if entry.file_type()?.is_dir() {
-            discover(&path, output, paths)?;
-        } else if entry.file_name() == "SKILL.md" {
-            paths.push(path);
-        }
-    }
-    Ok(())
+fn is_generated(path: &Path, root: &Path) -> bool {
+    OUTPUTS.iter().any(|spec| path == root.join(spec.output))
 }
 
-fn generate(root: &Path) -> Result<String> {
+fn generate(root: &Path, spec: &SkillOutput) -> Result<String> {
     let root = fs::canonicalize(root)?;
     let skill_root = root.join("skill");
-    let output = root.join(OUTPUT);
-    let (template_data, _) = read_document(&root.join(TEMPLATE), true)?;
+    let template = root.join(spec.template);
+    let (template_data, _) = read_document(&template, true)?;
     let mut names =
-        BTreeSet::from([required_string(&template_data, "name", Path::new(TEMPLATE))?.to_owned()]);
-    let mut paths = Vec::new();
-    if skill_root.exists() {
-        discover(&skill_root, output.parent().unwrap(), &mut paths)?;
-    }
-    paths.sort();
+        BTreeSet::from([required_string(&template_data, "name", &template)?.to_owned()]);
     let mut sections = BTreeMap::new();
-    for path in paths {
-        contained(&path, &skill_root)?;
+    for relative in spec.sources {
+        let path = contained(&root.join(relative), &skill_root)?;
+        if is_generated(&path, &root) || path == root.join(spec.output) {
+            return Err(format!("{}: cannot include generated output", path.display()).into());
+        }
         let (data, mut body) = read_document(&path, true)?;
         let name = required_string(&data, "name", &path)?;
         if !names.insert(name.to_owned()) {
@@ -265,7 +279,8 @@ fn generate(root: &Path) -> Result<String> {
             if metadata.contains_key("source") {
                 let relative = required_string(metadata, "source", &path)?;
                 source = contained(&path.parent().unwrap().join(relative), &skill_root)?;
-                if source.starts_with(output.parent().unwrap())
+                if is_generated(&source, &root)
+                    || source == root.join(spec.output)
                     || source == fs::canonicalize(&path)?
                 {
                     return Err(format!(
@@ -307,35 +322,58 @@ fn generate(root: &Path) -> Result<String> {
     if sections.is_empty() {
         return Err("No source skills found".into());
     }
+    let mut references = String::new();
+    for relative in spec.references {
+        let path = contained(&root.join(relative), &skill_root)?;
+        let body = read_text(&path)?;
+        if body.trim().is_empty() {
+            return Err(format!("{}: empty reference", path.display()).into());
+        }
+        references.push_str("\n\n---\n\n");
+        references.push_str(body.trim());
+    }
     Ok(format!(
-        "{}\n\n{}\n",
-        read_text(&root.join(TEMPLATE))?.trim_end(),
+        "{}\n\n{}{}\n",
+        read_text(&template)?.trim_end(),
         sections
             .into_values()
             .collect::<Vec<_>>()
-            .join("\n\n---\n\n")
+            .join("\n\n---\n\n"),
+        references
     ))
 }
 
-fn update(root: &Path, check: bool) -> Result<bool> {
-    let content = generate(root)?;
-    let output = root.join(OUTPUT);
-    let current = match read_text(&output) {
-        Ok(current) => Some(current),
-        Err(error) if error.kind() == ErrorKind::NotFound => None,
-        Err(error) => return Err(error.into()),
-    };
-    if current.as_deref() == Some(&content) {
-        return Ok(false);
+fn update(root: &Path, outputs: &[SkillOutput], check: bool) -> Result<bool> {
+    // Validate every input before replacing any generated document.
+    let mut changes = Vec::new();
+    for spec in outputs {
+        let content = generate(root, spec)?;
+        let output = root.join(spec.output);
+        let current = match read_text(&output) {
+            Ok(current) => Some(current),
+            Err(error) if error.kind() == ErrorKind::NotFound => None,
+            Err(error) => return Err(error.into()),
+        };
+        if current.as_deref() != Some(&content) {
+            changes.push((output, content));
+        }
     }
-    if check {
-        return Err(
-            format!("{OUTPUT} is stale; run cargo run --locked --example generate-skill").into(),
-        );
+    if check && !changes.is_empty() {
+        let paths = changes
+            .iter()
+            .map(|(path, _)| path.display().to_string())
+            .collect::<Vec<_>>();
+        return Err(format!(
+            "{} is stale; run cargo run --locked --example generate-skill",
+            paths.join(", ")
+        )
+        .into());
     }
-    fs::create_dir_all(output.parent().unwrap())?;
-    fs::write(output, content)?;
-    Ok(true)
+    for (output, content) in &changes {
+        fs::create_dir_all(output.parent().unwrap())?;
+        fs::write(output, content)?;
+    }
+    Ok(!changes.is_empty())
 }
 
 #[cfg(test)]

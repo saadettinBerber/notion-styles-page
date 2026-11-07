@@ -151,6 +151,8 @@ and the guides are available outside the source checkout.
 notion-page --skill
 notion-page --skill simple
 notion-page --skill turkish-writing
+notion-page --skill verified-notes
+notion-page --skill verified-notes-reviewer
 notion-page --skill writing
 ```
 
@@ -214,6 +216,12 @@ above. Each `SKILL.md` contains its instructions directly.
 | `turkish-writing` | `$turkish-writing` | `/turkish-writing` |
 | `notion-page` | `$notion-page` | `/notion-page` |
 | `generate-notion-styles` | `$generate-notion-styles` | `/generate-notion-styles` |
+| `verified-notes` | `$verified-notes` | `/verified-notes` |
+
+`verified-notes` writes source-based notes, independently reviews their claims,
+applies verified corrections, and then renders HTML. Its reviewer prompt is
+included in the skill and available through `notion-page --skill verified-notes-reviewer`.
+Ordinary `generate-notion-styles` page creation does not require this review workflow.
 
 For example, use `/simple Explain the result in plain language` in Claude
 Code or `$simple Explain the result in plain language` in Codex. The CLI
@@ -222,34 +230,33 @@ embeds the same skill files for `notion-page --skill simple` and
 
 </details>
 
-## Maintaining the combined skill
+## Maintaining the generated skills
 
 Edit `skill/simple/SKILL.md` to change the shared communication principles
-and examples. The generator discovers it with the other skills and includes its
-full body in the combined output. Keep the short core principles in the
+and examples. Both generated skills include its full body. Keep the short core principles in the
 standalone `notion-page` entry aligned when changing the philosophy.
 
-Add a folder containing `SKILL.md` anywhere under `skill/`. Give it YAML
-frontmatter with `name` and `description`, followed by its instructions:
+One Rust generator, `scripts/generate_skill.rs`, produces two independently
+installable entrypoints:
 
-```markdown
----
-name: example-guide
-description: Explain when these instructions apply.
----
+| Output | Workflow source | Shared source skills |
+|---|---|---|
+| `skill/generate-notion-styles/SKILL.md` | `scripts/generate-skill.template.md` | `simple`, `turkish-writing`, `notion-page` |
+| `skill/verified-notes/SKILL.md` | `scripts/verified-notes.template.md` | `simple`, `turkish-writing`, `notion-page` |
 
-Write the rules here.
-```
+The verified-notes output also includes the complete
+`skill/verified-notes/references/reviewer.md` prompt. Edit that reference to change
+the review checklist or report format. Edit its workflow template to change the
+writing, review, correction, and conversion sequence.
 
-The generator discovers skills automatically. It excludes
-`skill/generate-notion-styles/`, sorts sections by name, and rejects missing
-metadata or duplicate names. Keep each skill's full instructions in its
-`SKILL.md` so they are available when the skill is loaded.
-
-The combined output uses each skill's description and body. Ordinary relative
-Markdown links become GitHub links so copied installations can reach supporting
-documents. Register CLI guides separately in `src/cli/skills.rs`, embedding the
-same `SKILL.md` that holds their instructions.
+The `OUTPUTS` list explicitly selects sources for each output, so adding a skill
+does not silently make its workflow mandatory in other skills. Source skills
+require YAML `name` and `description` fields and a nonempty instruction body.
+The generator rejects invalid metadata, duplicate names within an output, and
+generated skill inputs. Shared sections are sorted by name. Ordinary relative
+Markdown links in shared skills become GitHub links for copied installations.
+Register CLI guides separately in `src/cli/skills.rs`; `include_str!` embeds the
+same documents so no source checkout is required at runtime.
 
 Generate or check locally with Cargo:
 
@@ -259,13 +266,16 @@ cargo run --locked --example generate-skill -- --check
 cargo test --locked
 ```
 
-Edit source skills or `scripts/generate-skill.template.md`, then regenerate;
-do not hand-edit the generated `SKILL.md`. `--check` reports stale output without
-writing. Existing agent installations need to be updated to receive changes.
+Edit source skills, workflow templates, or the reviewer prompt, then regenerate
+both outputs with the same command. Do not hand-edit generated `SKILL.md` files.
+`--check` reports missing or stale outputs without writing. All inputs are
+validated before any output is replaced; unchanged files are left alone.
+Existing agent installations need to be updated to receive changes.
 
 The generator is a development-only Cargo example. It uses the repository's
 existing Rust dependencies and does not require Python or install another CLI.
 
-GitHub Actions automation is pending publication. The workflow was tested
-locally but could not be pushed because the current GitHub session lacks the
-`workflow` scope. Use the local generation commands above until it is published.
+Generation runs explicitly on your machine; it does not require GitHub Actions
+and does not run automatically during `cargo build`. Regenerate before building
+the CLI to embed the latest guides. The obsolete Python-based Actions workflow
+has been removed.

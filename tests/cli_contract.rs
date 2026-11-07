@@ -103,6 +103,8 @@ fn skills_are_listed_with_descriptions_outside_the_checkout() {
             "notion-page",
             "simple",
             "turkish-writing",
+            "verified-notes",
+            "verified-notes-reviewer",
             "writing",
             "drawing",
             "showcase",
@@ -130,6 +132,14 @@ fn skill_commands_print_complete_documents_outside_the_checkout() {
     for (name, expected) in [
         ("notion-page", include_str!("../skill/notion-page/SKILL.md")),
         ("simple", include_str!("../skill/simple/SKILL.md")),
+        (
+            "verified-notes",
+            include_str!("../skill/verified-notes/SKILL.md"),
+        ),
+        (
+            "verified-notes-reviewer",
+            include_str!("../skill/verified-notes/references/reviewer.md"),
+        ),
         (
             "turkish-writing",
             include_str!("../skill/turkish-writing/SKILL.md"),
