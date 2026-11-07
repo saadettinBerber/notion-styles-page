@@ -20,6 +20,64 @@ cd notion-styles-page
 cargo install --locked --path .
 ```
 
+## Update CLI and installed skills
+
+From the source checkout, update the CLI and its installed skills together.
+
+```sh
+notion-page update
+```
+
+The command regenerates the combined skill, builds the CLI with Cargo, and
+replaces the installed executable only when its contents change. It copies
+changed skill files and adds missing references. Skills linked to this source
+checkout are already current. Existing files absent from the source are kept.
+
+The default skill locations are the user directories for Codex, Claude Code,
+and the Skills CLI (`~/.agents/skills`), plus `.codex/skills`, `.claude/skills`,
+and `.agents/skills` in the current directory and source root. `CODEX_HOME`
+and `CLAUDE_CONFIG_DIR` override their respective user directories. Only
+already-installed skills with matching names are updated.
+
+On another computer with a Git clone, fetch its upstream changes and update
+both installations in one command.
+
+```sh
+notion-page update --pull
+```
+
+`--pull` runs `git pull --ff-only` in the source checkout. Git errors stop the
+update. Pass a checkout explicitly when running elsewhere.
+
+```sh
+notion-page update --source /path/to/notion-styles-page --pull
+```
+
+Source lookup checks the current directory and its parents, then the checkout
+used to build the CLI, then the source packaged beside an npm executable.
+`--root DIR` selects a Cargo installation root. Repeat `--skills-dir DIR` to
+select specific skill directories in place of the defaults.
+
+For an older CLI without `update`, or to run through npx, use the local source
+package. Rust/Cargo and Node.js/npm must be installed.
+
+```sh
+npx --yes --package=. notion-page update
+npx --yes --package=. notion-page update --pull
+```
+
+The npm prepare step builds a Rust launcher. Each invocation builds and runs
+the CLI from the package's current source, reusing Cargo's build cache. The first
+run compiles the project. The private package can be run from a local path or
+directly from the GitHub source.
+
+```sh
+npx --yes --package=git+https://github.com/saadettinBerber/notion-styles-page.git notion-page update
+```
+
+For `--pull`, use a Git checkout through `--source`. npm's packaged source does
+not include Git checkout metadata.
+
 ## Run
 
 From any directory with `notion-page` on your `PATH`.

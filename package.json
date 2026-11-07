@@ -1,0 +1,26 @@
+{
+  "name": "@saadettinberber/notion-page",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Convert Markdown into Notion-style HTML pages",
+  "bin": {
+    "notion-page": "npm-bin/notion-page.exe"
+  },
+  "scripts": {
+    "prepare": "cargo run --locked --release --example prepare-npm"
+  },
+  "files": [
+    "Cargo.toml",
+    "Cargo.lock",
+    "src",
+    "assets",
+    "skill",
+    "scripts/*.rs",
+    "scripts/*.md",
+    "npm-bin"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/saadettinBerber/notion-styles-page.git"
+  }
+}

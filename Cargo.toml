@@ -14,6 +14,14 @@ name = "generate-skill"
 path = "scripts/generate_skill.rs"
 test = true
 
+[[example]]
+name = "prepare-npm"
+path = "scripts/prepare_npm.rs"
+
+[[example]]
+name = "npm-launcher"
+path = "scripts/npm_launcher.rs"
+
 [dependencies]
 base64 = "0.22"
 clap = { version = "4", features = ["derive"] }
