@@ -5,6 +5,9 @@ dist/
 
 /target/
 /npm-bin/
+/.agents/skills/
+/.claude/skills/
+/.codex/skills/
 /docs/readme-hero/.hyperframes/
 /docs/readme-hero/.thumbnails/
 

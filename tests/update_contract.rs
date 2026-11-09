@@ -87,8 +87,16 @@ fn update_handles_retries_unchanged_versions_relative_roots_and_failures() {
     )
     .unwrap();
     fs::write(&installed_skill, "Stale instructions.").unwrap();
+    let new_name = "generate-notion-styles-with-verificate";
+    let new_source = source.join("skill").join(new_name);
+    let new_skill = skills.join(new_name);
+    fs::create_dir_all(new_source.join("references")).unwrap();
+    let new_document = format!("---\nname: {new_name}\n---\nNew skill.\n");
+    fs::write(new_source.join("SKILL.md"), &new_document).unwrap();
+    fs::write(new_source.join("references/check.md"), "Visual checks.").unwrap();
     let failure = command().env("UPDATE_FAIL_BUILD", "1").output().unwrap();
     assert_eq!(failure.status.code(), Some(1));
+    assert!(!new_skill.exists());
     assert_eq!(
         fs::read_to_string(&installed_cli).unwrap(),
         "cli revision one"
@@ -105,6 +113,7 @@ fn update_handles_retries_unchanged_versions_relative_roots_and_failures() {
         .output()
         .unwrap();
     assert_eq!(pull_failure.status.code(), Some(1));
+    assert!(!new_skill.exists());
     assert_eq!(
         fs::read_to_string(workspace.join("commands")).unwrap(),
         "pull --ff-only\n"
@@ -115,7 +124,12 @@ fn update_handles_retries_unchanged_versions_relative_roots_and_failures() {
     );
 
     fs::write(workspace.join("commands"), "").unwrap();
-    assert_success(&command().arg("--pull").output().unwrap());
+    let success = command().arg("--pull").output().unwrap();
+    assert_success(&success);
+    assert!(
+        String::from_utf8_lossy(&success.stdout)
+            .contains("Skill generate-notion-styles-with-verificate: installed 2 file(s)")
+    );
     assert!(
         fs::read_to_string(workspace.join("commands"))
             .unwrap()
@@ -126,6 +140,14 @@ fn update_handles_retries_unchanged_versions_relative_roots_and_failures() {
         "cli revision two, same package version"
     );
     assert_eq!(fs::read_to_string(&installed_skill).unwrap(), document);
+    assert_eq!(
+        fs::read_to_string(new_skill.join("SKILL.md")).unwrap(),
+        new_document
+    );
+    assert_eq!(
+        fs::read_to_string(new_skill.join("references/check.md")).unwrap(),
+        "Visual checks."
+    );
 
     #[cfg(unix)]
     {

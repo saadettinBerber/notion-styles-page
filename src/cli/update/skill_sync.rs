@@ -5,7 +5,7 @@ use std::io::{ErrorKind, Write};
 use std::path::{Path, PathBuf};
 
 use serde_yaml_ng::Value;
-use tempfile::NamedTempFile;
+use tempfile::{NamedTempFile, tempdir_in};
 
 type Result<T> = std::result::Result<T, Box<dyn Error>>;
 
@@ -18,6 +18,7 @@ struct SkillUpdate {
     destination: PathBuf,
     installations: BTreeSet<PathBuf>,
     linked: bool,
+    new: bool,
     files: Vec<FileUpdate>,
 }
 
@@ -32,7 +33,7 @@ pub(super) fn plan(source_skills: &Path, roots: &[PathBuf]) -> Result<Plan> {
     let source_skills = fs::canonicalize(source_skills)?;
     let mut source_files = BTreeMap::new();
     read_source_files(&source_skills, &mut source_files)?;
-    let mut names = BTreeSet::new();
+    let mut sources = BTreeMap::new();
     let mut destinations: BTreeMap<PathBuf, (PathBuf, usize)> = BTreeMap::new();
     let mut skills: Vec<SkillUpdate> = Vec::new();
 
@@ -41,14 +42,36 @@ pub(super) fn plan(source_skills: &Path, roots: &[PathBuf]) -> Result<Plan> {
             continue;
         }
         let name = skill_name(document, contents)?;
-        if !names.insert(name.clone()) {
+        let source = document.parent().expect("source document has a parent");
+        if sources.insert(name.clone(), source).is_some() {
             return Err(format!("duplicate source skill name {name}").into());
         }
-        let source = document.parent().expect("source document has a parent");
-        for root in roots {
-            let installation = std::path::absolute(root.join(&name))?;
-            let Some(destination) = installed_destination(&installation)? else {
-                continue;
+    }
+    if sources.is_empty() {
+        return Err("No source skills found".into());
+    }
+
+    for root in roots {
+        let mut installations = Vec::new();
+        for name in sources.keys() {
+            let installation = std::path::absolute(root.join(name))?;
+            let destination = installed_destination(&installation)?;
+            installations.push((name, installation, destination));
+        }
+        // Only extend directories that already contain a skill from this repository.
+        if installations.iter().all(|(_, _, target)| target.is_none()) {
+            continue;
+        }
+        let canonical_root = fs::canonicalize(root)?;
+        for (name, installation, destination) in installations {
+            let source = sources[name];
+            let new = destination.is_none();
+            let destination = match destination {
+                Some(destination) => destination,
+                None => {
+                    ensure_missing(&installation)?;
+                    canonical_root.join(name)
+                }
             };
             if let Some((previous_source, index)) = destinations.get(&destination) {
                 if previous_source != source {
@@ -92,12 +115,10 @@ pub(super) fn plan(source_skills: &Path, roots: &[PathBuf]) -> Result<Plan> {
                 destination,
                 installations: BTreeSet::from([installation]),
                 linked,
+                new,
                 files,
             });
         }
-    }
-    if names.is_empty() {
-        return Err("No source skills found".into());
     }
     Ok(Plan { skills })
 }
@@ -107,7 +128,14 @@ impl Plan {
         // Check every planned replacement before changing any destination file.
         for skill in &self.skills {
             for installation in &skill.installations {
-                if fs::canonicalize(installation)? != skill.destination {
+                let destination = if skill.new {
+                    ensure_missing(installation)?;
+                    let parent = installation.parent().expect("skill path has a parent");
+                    fs::canonicalize(parent)?.join(&skill.name)
+                } else {
+                    fs::canonicalize(installation)?
+                };
+                if destination != skill.destination {
                     return Err(format!(
                         "{}: installed skill changed location during update",
                         installation.display()
@@ -128,9 +156,19 @@ impl Plan {
 
         // Stage the complete write set before replacing any installed file.
         let mut staged = Vec::new();
+        let mut new_skills = Vec::new();
         for skill in &self.skills {
+            let staging = if skill.new {
+                let parent = skill.destination.parent().expect("skill path has a parent");
+                Some(tempdir_in(parent)?)
+            } else {
+                None
+            };
+            let directory = staging
+                .as_ref()
+                .map_or(skill.destination.as_path(), |directory| directory.path());
             for file in &skill.files {
-                let destination = skill.destination.join(&file.relative);
+                let destination = directory.join(&file.relative);
                 let parent = destination.parent().expect("skill file has a parent");
                 fs::create_dir_all(parent)?;
                 let mut temporary = NamedTempFile::new_in(parent)?;
@@ -143,19 +181,28 @@ impl Plan {
                 temporary.as_file().sync_all()?;
                 staged.push((temporary, destination));
             }
+            if let Some(staging) = staging {
+                new_skills.push((staging, &skill.destination));
+            }
         }
         for (temporary, destination) in staged {
             temporary
                 .persist(&destination)
                 .map_err(|error| format!("{}: {}", destination.display(), error.error))?;
         }
+        for (staging, destination) in new_skills {
+            ensure_missing(destination)?;
+            fs::rename(staging.path(), destination)?;
+        }
 
         if self.skills.is_empty() {
-            println!("Skills: no installed skills found in the selected directories");
+            println!("Skills: no existing installation found; install a repository skill first");
         }
         for skill in self.skills {
             let status = if skill.linked {
                 "linked to source, up to date".to_owned()
+            } else if skill.new {
+                format!("installed {} file(s)", skill.files.len())
             } else if skill.files.is_empty() {
                 "up to date".to_owned()
             } else {
@@ -168,6 +215,18 @@ impl Plan {
             );
         }
         Ok(())
+    }
+}
+
+fn ensure_missing(path: &Path) -> Result<()> {
+    match fs::symlink_metadata(path) {
+        Err(error) if error.kind() == ErrorKind::NotFound => Ok(()),
+        Err(error) => Err(error.into()),
+        Ok(_) => Err(format!(
+            "{}: cannot install missing skill because the path already exists",
+            path.display()
+        )
+        .into()),
     }
 }
 
@@ -325,11 +384,12 @@ mod tests {
     }
 
     #[test]
-    fn refreshes_installed_skills_and_missing_references_without_touching_extra_files() {
+    fn refreshes_existing_skills_and_installs_missing_skills_with_references() {
         let fixture = Fixture::new();
         let source = fixture.source_skill("nested/source-folder", "example");
         write(&source.join("references/guide.md"), "New reference.");
-        fixture.source_skill("not-installed", "absent");
+        let missing = fixture.source_skill("not-installed", "absent");
+        write(&missing.join("references/new.md"), "New skill reference.");
         fixture.source_skill("generate-notion-styles", "generate-notion-styles");
         let installed = fixture.installed_skill("example");
         let combined = fixture.installed_skill("generate-notion-styles");
@@ -354,7 +414,90 @@ mod tests {
                 .unwrap()
                 .contains("New guidance.")
         );
-        assert!(!fixture.installed.join("absent").exists());
+        assert_eq!(
+            fs::read(fixture.installed.join("absent/SKILL.md")).unwrap(),
+            fs::read(missing.join("SKILL.md")).unwrap()
+        );
+        assert_eq!(
+            fs::read_to_string(fixture.installed.join("absent/references/new.md")).unwrap(),
+            "New skill reference."
+        );
+    }
+
+    #[test]
+    fn skips_directories_without_any_repository_skill() {
+        let fixture = Fixture::new();
+        fixture.source_skill("example", "example");
+        fixture.installed_skill("example");
+        fixture.source_skill("new-skill", "new-skill");
+        let empty = fixture._directory.path().join("empty");
+        let absent = fixture._directory.path().join("absent");
+        let unrelated = fixture._directory.path().join("unrelated");
+        fs::create_dir(&empty).unwrap();
+        write(&unrelated.join("other/SKILL.md"), "Unrelated skill.");
+
+        plan(
+            &fixture.source,
+            &[
+                fixture.installed.clone(),
+                empty.clone(),
+                absent.clone(),
+                unrelated.clone(),
+            ],
+        )
+        .unwrap()
+        .apply()
+        .unwrap();
+
+        assert!(fixture.installed.join("new-skill/SKILL.md").is_file());
+        assert_eq!(fs::read_dir(empty).unwrap().count(), 0);
+        assert!(!absent.exists());
+        assert_eq!(fs::read_dir(&unrelated).unwrap().count(), 1);
+        assert_eq!(
+            fs::read_to_string(unrelated.join("other/SKILL.md")).unwrap(),
+            "Unrelated skill."
+        );
+    }
+
+    #[test]
+    fn occupied_missing_skill_path_prevents_every_planned_write() {
+        let fixture = Fixture::new();
+        fixture.source_skill("example", "example");
+        let installed = fixture.installed_skill("example");
+        fixture.source_skill("new-skill", "new-skill");
+        write(
+            &fixture.installed.join("new-skill/notes.md"),
+            "Local notes.",
+        );
+
+        assert!(plan(&fixture.source, std::slice::from_ref(&fixture.installed)).is_err());
+        assert!(!fixture.installed.join("new-skill/SKILL.md").exists());
+        assert_eq!(
+            fs::read_to_string(installed.join("SKILL.md")).unwrap(),
+            "Old guidance."
+        );
+        assert_eq!(
+            fs::read_to_string(fixture.installed.join("new-skill/notes.md")).unwrap(),
+            "Local notes."
+        );
+    }
+
+    #[test]
+    fn concurrently_created_skill_prevents_every_planned_write() {
+        let fixture = Fixture::new();
+        fixture.source_skill("example", "example");
+        let installed = fixture.installed_skill("example");
+        fixture.source_skill("new-skill", "new-skill");
+        let plan = fixture.plan();
+        let concurrent = fixture.installed_skill("new-skill");
+
+        assert!(plan.apply().is_err());
+        for skill in [installed, concurrent] {
+            assert_eq!(
+                fs::read_to_string(skill.join("SKILL.md")).unwrap(),
+                "Old guidance."
+            );
+        }
     }
 
     #[test]
@@ -362,16 +505,23 @@ mod tests {
         let fixture = Fixture::new();
         fixture.source_skill("example", "example");
         let installed = fixture.installed_skill("example").join("SKILL.md");
+        fixture.source_skill("new-skill", "new-skill");
+        let added = fixture.installed.join("new-skill/SKILL.md");
         fixture.plan().apply().unwrap();
         let before = fs::metadata(&installed).unwrap();
+        let added_before = fs::metadata(&added).unwrap();
 
         let plan = fixture.plan();
-        assert!(plan.skills[0].files.is_empty());
+        assert!(plan.skills.iter().all(|skill| skill.files.is_empty()));
         plan.apply().unwrap();
 
         assert_eq!(
             before.modified().unwrap(),
             fs::metadata(installed).unwrap().modified().unwrap()
+        );
+        assert_eq!(
+            added_before.modified().unwrap(),
+            fs::metadata(added).unwrap().modified().unwrap()
         );
     }
 
@@ -421,6 +571,7 @@ mod tests {
 
         let fixture = Fixture::new();
         let source = fixture.source_skill("example", "example");
+        fixture.source_skill("new-skill", "new-skill");
         let installed = fixture.installed.join("example");
         symlink(&source, &installed).unwrap();
         let plan = fixture.plan();
@@ -429,6 +580,32 @@ mod tests {
         assert!(plan.skills[0].files.is_empty());
         plan.apply().unwrap();
         assert!(fs::symlink_metadata(installed).unwrap().is_symlink());
+        assert!(fixture.installed.join("new-skill/SKILL.md").is_file());
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn linked_skill_roots_install_missing_skills_once() {
+        use std::os::unix::fs::symlink;
+
+        let fixture = Fixture::new();
+        fixture.source_skill("example", "example");
+        fixture.installed_skill("example");
+        fixture.source_skill("new-skill", "new-skill");
+        let alias = fixture._directory.path().join("alias");
+        symlink(&fixture.installed, &alias).unwrap();
+
+        let plan = plan(&fixture.source, &[fixture.installed.clone(), alias.clone()]).unwrap();
+        assert_eq!(plan.skills.len(), 2);
+        assert!(
+            plan.skills
+                .iter()
+                .all(|skill| skill.installations.len() == 2)
+        );
+        plan.apply().unwrap();
+
+        assert!(alias.join("new-skill/SKILL.md").is_file());
+        assert_eq!(fs::read_dir(&fixture.installed).unwrap().count(), 2);
     }
 
     #[cfg(unix)]

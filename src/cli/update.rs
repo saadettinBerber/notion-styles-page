@@ -23,7 +23,7 @@ pub(super) struct Args {
     #[arg(long, value_name = "DIR")]
     root: Option<PathBuf>,
 
-    /// Update installed skills in this directory (repeatable, replaces default directories)
+    /// Sync an existing skill installation, including missing skills (repeatable, replaces defaults)
     #[arg(long = "skills-dir", value_name = "DIR")]
     skills_dirs: Vec<PathBuf>,
 }
@@ -76,7 +76,7 @@ pub(super) fn run(args: Args) -> Result<()> {
         println!("Updated CLI: {}", installed.display());
     }
     skills.apply()?;
-    println!("CLI and installed skills are up to date.");
+    println!("CLI update and skill synchronization complete.");
     Ok(())
 }
 

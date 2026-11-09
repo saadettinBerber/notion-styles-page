@@ -30,14 +30,20 @@ notion-page update
 
 The command regenerates the combined skill, builds the CLI with Cargo, and
 replaces the installed executable only when its contents change. It copies
-changed skill files and adds missing references. Skills linked to this source
-checkout are already current. Existing files absent from the source are kept.
+changed skill files, adds missing references, and installs missing repository
+skills into directories that already contain at least one matching skill.
+New skills are copied with their references and templates; existing links to
+this source checkout are preserved. Existing files absent from the source are kept.
 
 The default skill locations are the user directories for Codex, Claude Code,
 and the Skills CLI (`~/.agents/skills`), plus `.codex/skills`, `.claude/skills`,
 and `.agents/skills` in the current directory and source root. `CODEX_HOME`
-and `CLAUDE_CONFIG_DIR` override their respective user directories. Only
-already-installed skills with matching names are updated.
+and `CLAUDE_CONFIG_DIR` override their respective user directories. Directories
+without any matching installed skill are left alone. For a first installation,
+use the commands in the **Add to agents** section below.
+
+When upgrading from a CLI that only refreshes existing skills, run
+`notion-page update` once more after the upgrade to install missing skills.
 
 On another computer with a Git clone, fetch its upstream changes and update
 both installations in one command.
@@ -56,7 +62,8 @@ notion-page update --source /path/to/notion-styles-page --pull
 Source lookup checks the current directory and its parents, then the checkout
 used to build the CLI, then the source packaged beside an npm executable.
 `--root DIR` selects a Cargo installation root. Repeat `--skills-dir DIR` to
-select specific skill directories in place of the defaults.
+select specific skill directories in place of the defaults; these must also
+already contain a repository skill.
 
 For an older CLI without `update`, or to run through npx, use the local source
 package. Rust/Cargo and Node.js/npm must be installed.
