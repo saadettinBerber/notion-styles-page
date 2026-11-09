@@ -216,7 +216,15 @@ above. Each `SKILL.md` contains its instructions directly.
 | `turkish-writing` | `$turkish-writing` | `/turkish-writing` |
 | `notion-page` | `$notion-page` | `/notion-page` |
 | `generate-notion-styles` | `$generate-notion-styles` | `/generate-notion-styles` |
+| `generate-notion-styles-with-verificate` | `$generate-notion-styles-with-verificate` | `/generate-notion-styles-with-verificate` |
 | `verified-notes` | `$verified-notes` | `/verified-notes` |
+
+`generate-notion-styles` writes Markdown, converts it with `notion-page`, and
+delivers the output without post-render visual checks. Use
+`generate-notion-styles-with-verificate` for the same writing and conversion
+guidance plus a final visual check in light and dark themes and at phone width.
+Both are generated from the same shared content; only the latter adds visual
+verification. Conversion errors are still fixed in either workflow.
 
 `verified-notes` writes source-based notes, independently reviews their claims,
 applies verified corrections, and then renders HTML. Its reviewer prompt is
@@ -233,16 +241,23 @@ embeds the same skill files for `notion-page --skill simple` and
 ## Maintaining the generated skills
 
 Edit `skill/simple/SKILL.md` to change the shared communication principles
-and examples. Both generated skills include its full body. Keep the short core principles in the
+and examples. All generated skills include its full body. Keep the short core principles in the
 standalone `notion-page` entry aligned when changing the philosophy.
 
-One Rust generator, `scripts/generate_skill.rs`, produces two independently
+One Rust generator, `scripts/generate_skill.rs`, produces three independently
 installable entrypoints:
 
 | Output | Workflow source | Shared source skills |
 |---|---|---|
-| `skill/generate-notion-styles/SKILL.md` | `scripts/generate-skill.template.md` | `simple`, `turkish-writing`, `notion-page` |
+| `skill/generate-notion-styles/SKILL.md` | `scripts/generate-skill.template.md` + `scripts/generate-page-workflow.md` | `simple`, `turkish-writing`, `notion-page` |
+| `skill/generate-notion-styles-with-verificate/SKILL.md` | `scripts/generate-skill-with-verificate.template.md` + `scripts/generate-page-workflow.md` | `simple`, `turkish-writing`, `notion-page` |
 | `skill/verified-notes/SKILL.md` | `scripts/verified-notes.template.md` | `simple`, `turkish-writing`, `notion-page` |
+
+The two page-generation templates contain only output metadata and a generated
+file notice. Their workflow body comes from `scripts/generate-page-workflow.md`.
+The visual variant appends
+`skill/generate-notion-styles-with-verificate/references/visual-verification.md`
+after the shared content. Edit that reference to change the final visual check.
 
 The verified-notes output also includes the complete
 `skill/verified-notes/references/reviewer.md` prompt. Edit that reference to change
@@ -266,8 +281,8 @@ cargo run --locked --example generate-skill -- --check
 cargo test --locked
 ```
 
-Edit source skills, workflow templates, or the reviewer prompt, then regenerate
-both outputs with the same command. Do not hand-edit generated `SKILL.md` files.
+Edit source skills, workflow templates, the shared workflow, or reference prompts,
+then regenerate all outputs with the same command. Do not hand-edit generated `SKILL.md` files.
 `--check` reports missing or stale outputs without writing. All inputs are
 validated before any output is replaced; unchanged files are left alone.
 Existing agent installations need to be updated to receive changes.

@@ -19,8 +19,6 @@ description: Convert Markdown notes into a standalone, offline Notion-style HTML
 
 - Run `notion-page notes.md`, or `notion-page notes/*.md --output pages`. Fix any reported errors before sharing the output.
 
-- Check the HTML in light and dark themes and at phone width. Look for overflow, overlapping labels, unclosed `:::` markers, and unreadable colors. If a browser cannot open a large embedded video through `file://`, serve the output with `python3 -m http.server 8000`.
-
 ## CLI guides
 
 ---

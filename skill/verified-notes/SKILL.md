@@ -102,8 +102,6 @@ Source: [skill/notion-page/SKILL.md](https://github.com/saadettinBerber/notion-s
 
 - Run `notion-page notes.md`, or `notion-page notes/*.md --output pages`. Fix any reported errors before sharing the output.
 
-- Check the HTML in light and dark themes and at phone width. Look for overflow, overlapping labels, unclosed `:::` markers, and unreadable colors. If a browser cannot open a large embedded video through `file://`, serve the output with `python3 -m http.server 8000`.
-
 #### CLI guides
 
 ---
@@ -233,7 +231,7 @@ easier to follow.
 
 1. Add YAML frontmatter containing a `title` field at the start of `notes.md`.
 2. Run `notion-page notes.md`.
-3. Open the generated `notes.html` file and check the page.
+3. Share the generated `notes.html` file.
 
 Before finishing, check that the reader can follow the main idea and that
 simplifying the text has preserved its meaning.

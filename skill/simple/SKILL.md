@@ -92,7 +92,7 @@ easier to follow.
 
 1. Add YAML frontmatter containing a `title` field at the start of `notes.md`.
 2. Run `notion-page notes.md`.
-3. Open the generated `notes.html` file and check the page.
+3. Share the generated `notes.html` file.
 
 Before finishing, check that the reader can follow the main idea and that
 simplifying the text has preserved its meaning.

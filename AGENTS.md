@@ -34,8 +34,9 @@ PYO3_PYTHON=python cargo clippy --locked --manifest-path bindings/python/Cargo.t
 
 Record verification results in the commit or pull request description.
 
-When editing source skills, either `scripts/*.template.md` workflow template, or
-the reviewer reference, regenerate both `generate-notion-styles` and
+When editing source skills, `scripts/*.template.md`, the shared
+`scripts/generate-page-workflow.md`, or workflow references, regenerate
+`generate-notion-styles`, `generate-notion-styles-with-verificate`, and
 `verified-notes` with `cargo run --locked --example generate-skill`. Do not edit
 their generated `SKILL.md` files directly. Verify
 freshness with `cargo run --locked --example generate-skill -- --check`.

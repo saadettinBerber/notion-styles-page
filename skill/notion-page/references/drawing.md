@@ -73,6 +73,7 @@ print(svg())
 
 - Route connectors around labels. Prefer right-angled paths with rounded corners (`M … L … Q …`) and put labels above horizontal segments.
 - Keep punctuation attached to the preceding word, including around `<tspan>` emphasis.
-- Estimate text width at roughly 7.4 units per character for 15-unit text, then check in a browser.
+- Estimate text width at roughly 7.4 units per character for 15-unit text.
 - Check that percentages sum to 100 and totals and products agree.
-- Inspect both themes and phone width. Keep text at least 13 units tall; allow the drawing to scroll horizontally.
+- Keep text at least 13 units tall; allow the drawing to scroll horizontally.
+- When visual verification is requested, check the drawing in a browser in both themes and at phone width.

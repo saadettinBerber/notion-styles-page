@@ -22,6 +22,18 @@ impl Fixture {
             OUTPUTS[1].template,
             include_str!("verified-notes.template.md"),
         );
+        fixture.write(
+            OUTPUTS[2].template,
+            include_str!("generate-skill-with-verificate.template.md"),
+        );
+        fixture.write(
+            OUTPUTS[0].workflow.unwrap(),
+            include_str!("generate-page-workflow.md"),
+        );
+        fixture.write(
+            OUTPUTS[2].references[0],
+            "## Visual verification\n\nInspect HTML.",
+        );
         for (folder, body) in [
             ("simple", "Shared clarity."),
             ("turkish-writing", "Türkçe açıklama."),
@@ -65,7 +77,8 @@ fn generates_separate_workflows_from_explicit_shared_sources() {
     fixture.skill("unrelated", "unrelated", "Do not include this workflow.");
     let page = fixture.generate(0);
     let verified = fixture.generate(1);
-    for output in [&page, &verified] {
+    let visual = fixture.generate(2);
+    for output in [&page, &verified, &visual] {
         assert!(output.contains("Shared clarity."));
         assert!(output.contains("Türkçe açıklama."));
         assert!(output.contains("Convert the page."));
@@ -91,12 +104,14 @@ fn generates_separate_workflows_from_explicit_shared_sources() {
 }
 
 #[test]
-fn shared_edits_update_both_outputs_and_reviewer_edits_update_only_verified_notes() {
+fn shared_edits_update_all_outputs_and_reviewer_edits_update_only_verified_notes() {
     let fixture = Fixture::new();
     fixture.update(false).unwrap();
     let page = fixture.generate(0);
+    let visual = fixture.generate(2);
     fixture.write(OUTPUTS[1].references[0], "Updated reviewer prompt.");
     assert_eq!(page, fixture.generate(0));
+    assert_eq!(visual, fixture.generate(2));
     assert!(fixture.generate(1).contains("Updated reviewer prompt."));
     assert!(fixture.update(true).is_err());
     fixture.skill("simple", "simple", "Changed shared guidance.");
@@ -109,6 +124,54 @@ fn shared_edits_update_both_outputs_and_reviewer_edits_update_only_verified_note
         );
     }
     assert!(!fixture.update(true).unwrap());
+}
+
+#[test]
+fn visual_variant_only_appends_verification_to_the_shared_page_body() {
+    let fixture = Fixture::new();
+    fixture.update(false).unwrap();
+    let body = |index: usize| {
+        read_document(&fixture.root.join(OUTPUTS[index].output), true)
+            .unwrap()
+            .1
+    };
+    let page = body(0);
+    let reference = read_text(&fixture.root.join(OUTPUTS[2].references[0])).unwrap();
+    assert_eq!(body(2), format!("{page}\n\n---\n\n{}", reference.trim()));
+
+    let verified = fixture.generate(1);
+    fixture.write(OUTPUTS[0].workflow.unwrap(), "Updated common workflow.");
+    fixture.update(false).unwrap();
+    assert_ne!(page, body(0));
+    assert_eq!(
+        body(2),
+        format!("{}\n\n---\n\n{}", body(0), reference.trim())
+    );
+    assert_eq!(verified, fixture.generate(1));
+
+    let page = fixture.generate(0);
+    fixture.write(OUTPUTS[2].references[0], "Updated visual verification.");
+    assert_eq!(page, fixture.generate(0));
+    assert_eq!(verified, fixture.generate(1));
+    assert!(fixture.update(true).is_err());
+}
+
+#[test]
+fn rejects_missing_empty_or_outside_workflows() {
+    let fixture = Fixture::new();
+    let mut spec = SkillOutput {
+        output: OUTPUTS[0].output,
+        template: OUTPUTS[0].template,
+        workflow: Some("scripts/missing.md"),
+        sources: SHARED_SOURCES,
+        references: &[],
+    };
+    assert!(generate(&fixture.root, &spec).is_err());
+    fixture.write("scripts/empty.md", "  ");
+    spec.workflow = Some("scripts/empty.md");
+    assert!(generate(&fixture.root, &spec).is_err());
+    spec.workflow = Some("../outside.md");
+    assert!(generate(&fixture.root, &spec).is_err());
 }
 
 #[test]
@@ -147,7 +210,7 @@ fn unchanged_outputs_are_not_rewritten_and_line_endings_are_normalized() {
 }
 
 #[test]
-fn validates_all_inputs_before_replacing_either_output() {
+fn validates_all_inputs_before_replacing_any_output() {
     let fixture = Fixture::new();
     fixture.update(false).unwrap();
     let before: Vec<_> = OUTPUTS
@@ -182,7 +245,12 @@ fn rejects_missing_malformed_empty_and_duplicate_sources() {
         assert!(fixture.update(false).is_err(), "accepted {invalid:?}");
         assert!(!fixture.root.join(OUTPUTS[0].output).exists());
     }
-    for name in ["notion-page", "generate-notion-styles", "verified-notes"] {
+    for name in [
+        "notion-page",
+        "generate-notion-styles",
+        "verified-notes",
+        "generate-notion-styles-with-verificate",
+    ] {
         fixture.skill("simple", name, "Rules.");
         assert!(
             fixture
@@ -216,6 +284,7 @@ fn resolves_metadata_sources_and_rejects_self_generated_or_outside_sources() {
         "../../outside.md",
         "../generate-notion-styles/SKILL.md",
         "../verified-notes/SKILL.md",
+        "../generate-notion-styles-with-verificate/SKILL.md",
         "SKILL.md",
     ] {
         source_skill(source);
@@ -254,6 +323,7 @@ fn rejects_generated_inputs_empty_source_lists_and_empty_references() {
     let mut spec = SkillOutput {
         output: "skill/example/SKILL.md",
         template: OUTPUTS[0].template,
+        workflow: None,
         sources: &["skill/verified-notes/SKILL.md"],
         references: &[],
     };

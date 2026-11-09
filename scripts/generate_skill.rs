@@ -16,6 +16,7 @@ use serde_yaml_ng::{Mapping, Value};
 struct SkillOutput {
     output: &'static str,
     template: &'static str,
+    workflow: Option<&'static str>,
     sources: &'static [&'static str],
     references: &'static [&'static str],
 }
@@ -29,14 +30,25 @@ const OUTPUTS: &[SkillOutput] = &[
     SkillOutput {
         output: "skill/generate-notion-styles/SKILL.md",
         template: "scripts/generate-skill.template.md",
+        workflow: Some("scripts/generate-page-workflow.md"),
         sources: SHARED_SOURCES,
         references: &[],
     },
     SkillOutput {
         output: "skill/verified-notes/SKILL.md",
         template: "scripts/verified-notes.template.md",
+        workflow: None,
         sources: SHARED_SOURCES,
         references: &["skill/verified-notes/references/reviewer.md"],
+    },
+    SkillOutput {
+        output: "skill/generate-notion-styles-with-verificate/SKILL.md",
+        template: "scripts/generate-skill-with-verificate.template.md",
+        workflow: Some("scripts/generate-page-workflow.md"),
+        sources: SHARED_SOURCES,
+        references: &[
+            "skill/generate-notion-styles-with-verificate/references/visual-verification.md",
+        ],
     },
 ];
 const SOURCE_URL: &str = "https://github.com/saadettinBerber/notion-styles-page/blob/main/";
@@ -258,6 +270,16 @@ fn generate(root: &Path, spec: &SkillOutput) -> Result<String> {
     let skill_root = root.join("skill");
     let template = root.join(spec.template);
     let (template_data, _) = read_document(&template, true)?;
+    let mut introduction = read_text(&template)?.trim_end().to_owned();
+    if let Some(relative) = spec.workflow {
+        let path = contained(&root.join(relative), &root)?;
+        let body = read_text(&path)?;
+        if body.trim().is_empty() {
+            return Err(format!("{}: empty workflow", path.display()).into());
+        }
+        introduction.push_str("\n\n");
+        introduction.push_str(body.trim());
+    }
     let mut names =
         BTreeSet::from([required_string(&template_data, "name", &template)?.to_owned()]);
     let mut sections = BTreeMap::new();
@@ -334,7 +356,7 @@ fn generate(root: &Path, spec: &SkillOutput) -> Result<String> {
     }
     Ok(format!(
         "{}\n\n{}{}\n",
-        read_text(&template)?.trim_end(),
+        introduction,
         sections
             .into_values()
             .collect::<Vec<_>>()
