@@ -34,7 +34,7 @@ Source: [skill/notion-page/SKILL.md](https://github.com/saadettinBerber/notion-s
 
 - Read `notion-page --help`. If the CLI is missing, follow the repository's [installation instructions](https://github.com/saadettinBerber/notion-styles-page#install).
 
-- To update an existing installation, run `notion-page update --source /path/to/notion-styles-page`. This rebuilds the CLI and refreshes installed skills from that source. Add `--pull` to fetch the checkout's upstream changes first. From the source directory, `npx --yes --package=. notion-page update` also works with Rust/Cargo and Node.js/npm installed.
+- To update an existing installation, run `notion-page update --source /path/to/notion-styles-page`. This rebuilds the CLI, refreshes installed skills, and adds missing repository skills to directories that already contain one. Add `--pull` to fetch the checkout's upstream changes first. From the source directory, `npx --yes --package=. notion-page update` also works with Rust/Cargo and Node.js/npm installed.
 
 - **Be concise: use fewer words without losing meaning.** In user-facing replies, progress updates, and documents, lead with what the reader needs. Explain the reason and useful detail in natural language. Use shared context in conversation and enough context for the intended reader in standalone notes. Preserve meaning, examples, conditions, and uncertainty. Choose paragraphs, lists, or tables to fit the content. Report the result and the scope of verification. For additional examples in a standalone installation, read `notion-page --skill simple`.
 
