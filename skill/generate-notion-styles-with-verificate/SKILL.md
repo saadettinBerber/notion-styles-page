@@ -341,6 +341,127 @@ and [translation style rules](https://github.com/saadettinBerber/just_read/blob/
 
 ---
 
+# Concise, self-contained notes
+
+**Keep the context readers need in as few words as possible.**
+
+- Name the subject and action. Replace phrases such as “we fixed this” or “as discussed” with their explicit meaning.
+
+- Lead with the main point. Preserve the purpose, reason, result, and next step when needed; let the content determine the structure.
+
+- Keep conditions, numbers, commands, and sources that affect meaning. Briefly explain essential terms and abbreviations on first use.
+
+- Use known dates instead of “yesterday” or “the other day.” State meaningful uncertainty; do not invent facts, dates, or reasons.
+
+- Remove repetition and unnecessary introductions, conclusions, and examples. Keep sentences natural and clear.
+
+- Use headings and lists when they help. Let the required context determine the length.
+
+For instructions, checklists, or procedural notes, also apply the included Readable Instructions layer.
+
+Check that the note makes sense without the conversation, then remove words that do not change its meaning.
+
+**Example:** If automatic refresh slowed the order page, write “Automatic refresh on the order page was disabled because it slowed the page” instead of “We disabled it.”
+
+---
+
+# Readable Instructions
+
+Apply this layer only to instructions, checklists, and procedural guidelines.
+For other prose, use the shared communication guidance.
+
+---
+
+**Make rules easy to scan without changing their meaning.**
+
+- **Preserve the request:**
+
+  - Keep requirements, conditions, exceptions and scope. Do not invent rules.
+
+  - Follow the requested language and format. Preserve existing headings and intentionally empty sections.
+
+  - Provide previews when requested; edit files only within the authorized scope.
+
+- **Shape the text:**
+
+  - Open each filled section with a brief, bold guiding sentence.
+
+  - Give each bullet one action. Keep its condition attached.
+
+  - Group related rules under short, bold parent bullets. Indent children by two spaces.
+
+  - Leave blank lines between bullets and put `---` below headings.
+
+  - Keep simple lists flat. Use natural wording without fixed word limits.
+
+Before finishing, compare meanings: preserve obligations, permissions, limits and order. More bullets may make the same content easier to read.
+
+## Examples
+
+---
+
+These examples demonstrate formatting; their policies apply only to the examples.
+
+### Split and Group
+
+---
+
+**Before**
+
+```markdown
+## Local Refinement
+
+Preserve existing conventions and unaffected behavior; improve touched code in small, verified steps only when a concrete benefit supports the task.
+```
+
+**After**
+
+```markdown
+## Local Refinement
+
+---
+
+**Improve in small steps. Preserve behavior.**
+
+- **When editing:**
+
+  - Follow existing conventions.
+
+  - Preserve unaffected behavior.
+
+  - Improve touched code only when a concrete benefit supports the task.
+
+  - Verify each small change.
+```
+
+### Keep Conditions
+
+---
+
+**Before**
+
+```markdown
+## Retries
+
+Check the error before retrying. Retry temporary failures at most twice; report permanent failures without retrying.
+```
+
+**After**
+
+```markdown
+## Retries
+
+---
+
+**Check the error before retrying.**
+
+- Retry temporary failures at most twice.
+
+- Report permanent failures without retrying.
+```
+
+---
+
 ## Visual verification
 
 After conversion and before delivery, check the HTML in light and dark themes and

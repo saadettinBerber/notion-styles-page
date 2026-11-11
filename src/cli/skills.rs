@@ -8,18 +8,26 @@ pub(super) enum Skill {
     NotionPage,
     #[value(
         alias = "communication",
-        alias = "basic-make-notes",
-        alias = "readable-instructions",
         help = "Communicate clearly in conversations and documents with context-sensitive Markdown."
     )]
     Simple,
+    #[value(help = "Format instructions and checklists as clear grouped rules.")]
+    ReadableInstructions,
+    #[value(help = "Write concise notes that make sense without the conversation.")]
+    BasicMakeNotes,
+    #[value(help = "Create Notion-style HTML with shared writing guidance.")]
+    GenerateNotionStyles,
+    #[value(help = "Create Notion-style HTML and visually verify the result.")]
+    GenerateNotionStylesWithVerificate,
+    #[value(help = "Inspect existing HTML in light and dark themes and at phone width.")]
+    VisualVerification,
     #[value(help = "Write natural Turkish notes with consistent terminology and correct spelling.")]
     TurkishWriting,
     #[value(
         help = "Write source-based notes, independently review them, and render verified HTML."
     )]
     VerifiedNotes,
-    #[value(help = "Print the read-only source review prompt template.")]
+    #[value(help = "Review existing notes against primary sources without editing files.")]
     VerifiedNotesReviewer,
     #[value(
         alias = "yazim",
@@ -49,10 +57,21 @@ impl Skill {
             }
             Self::NotionPage => include_str!("../../skill/notion-page/SKILL.md"),
             Self::Simple => include_str!("../../skill/simple/SKILL.md"),
+            Self::ReadableInstructions => {
+                include_str!("../../skill/readable-instructions/SKILL.md")
+            }
+            Self::BasicMakeNotes => include_str!("../../skill/basic-make-notes/SKILL.md"),
+            Self::GenerateNotionStyles => {
+                include_str!("../../skill/generate-notion-styles/SKILL.md")
+            }
+            Self::GenerateNotionStylesWithVerificate => {
+                include_str!("../../skill/generate-notion-styles-with-verificate/SKILL.md")
+            }
+            Self::VisualVerification => include_str!("../../skill/visual-verification/SKILL.md"),
             Self::TurkishWriting => include_str!("../../skill/turkish-writing/SKILL.md"),
             Self::VerifiedNotes => include_str!("../../skill/verified-notes/SKILL.md"),
             Self::VerifiedNotesReviewer => {
-                include_str!("../../skill/verified-notes/references/reviewer.md")
+                include_str!("../../skill/verified-notes-reviewer/SKILL.md")
             }
             Self::Writing => notion_sayfa::writing_guide(),
             Self::Drawing => include_str!("../../skill/notion-page/references/drawing.md"),

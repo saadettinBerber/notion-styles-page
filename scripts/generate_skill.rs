@@ -26,20 +26,29 @@ const SHARED_SOURCES: &[&str] = &[
     "skill/turkish-writing/SKILL.md",
     "skill/notion-page/SKILL.md",
 ];
+const WRITING_LAYERS: &[&str] = &[
+    "skill/basic-make-notes/references/rules.md",
+    "skill/readable-instructions/references/rules.md",
+];
 const OUTPUTS: &[SkillOutput] = &[
     SkillOutput {
         output: "skill/generate-notion-styles/SKILL.md",
         template: "scripts/generate-skill.template.md",
         workflow: Some("scripts/generate-page-workflow.md"),
         sources: SHARED_SOURCES,
-        references: &[],
+        references: WRITING_LAYERS,
     },
     SkillOutput {
         output: "skill/verified-notes/SKILL.md",
         template: "scripts/verified-notes.template.md",
         workflow: None,
         sources: SHARED_SOURCES,
-        references: &["skill/verified-notes/references/reviewer.md"],
+        references: &[
+            "skill/basic-make-notes/references/rules.md",
+            "skill/readable-instructions/references/rules.md",
+            "skill/generate-notion-styles-with-verificate/references/visual-verification.md",
+            "skill/verified-notes/references/reviewer.md",
+        ],
     },
     SkillOutput {
         output: "skill/generate-notion-styles-with-verificate/SKILL.md",
@@ -47,8 +56,40 @@ const OUTPUTS: &[SkillOutput] = &[
         workflow: Some("scripts/generate-page-workflow.md"),
         sources: SHARED_SOURCES,
         references: &[
+            "skill/basic-make-notes/references/rules.md",
+            "skill/readable-instructions/references/rules.md",
             "skill/generate-notion-styles-with-verificate/references/visual-verification.md",
         ],
+    },
+    SkillOutput {
+        output: "skill/readable-instructions/SKILL.md",
+        template: "scripts/readable-instructions.template.md",
+        workflow: None,
+        sources: &["skill/simple/SKILL.md"],
+        references: &["skill/readable-instructions/references/rules.md"],
+    },
+    SkillOutput {
+        output: "skill/basic-make-notes/SKILL.md",
+        template: "scripts/basic-make-notes.template.md",
+        workflow: None,
+        sources: &["skill/simple/SKILL.md"],
+        references: WRITING_LAYERS,
+    },
+    SkillOutput {
+        output: "skill/visual-verification/SKILL.md",
+        template: "scripts/visual-verification.template.md",
+        workflow: None,
+        sources: &["skill/simple/SKILL.md"],
+        references: &[
+            "skill/generate-notion-styles-with-verificate/references/visual-verification.md",
+        ],
+    },
+    SkillOutput {
+        output: "skill/verified-notes-reviewer/SKILL.md",
+        template: "scripts/verified-notes-reviewer.template.md",
+        workflow: None,
+        sources: &["skill/simple/SKILL.md"],
+        references: &["skill/verified-notes/references/reviewer.md"],
     },
 ];
 const SOURCE_URL: &str = "https://github.com/saadettinBerber/notion-styles-page/blob/main/";

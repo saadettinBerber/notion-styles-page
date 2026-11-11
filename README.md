@@ -177,9 +177,12 @@ The guides are written in English. The Turkish writing guide includes Turkish
 language examples with English explanations. Follow the user's requested
 language when preparing replies and documents.
 
-The former `communication`, `basic-make-notes`, and `readable-instructions` CLI names are aliases
-for `simple`. Their standalone skill entries have been consolidated into
-the simple skill.
+`communication` remains an alias for `simple`. `basic-make-notes` and
+`readable-instructions` are independent skills: each includes `simple` plus its
+own rules. `visual-verification` checks an existing page, and
+`verified-notes-reviewer` reviews an existing note without editing it. All are
+available through `notion-page --skill <name>` and as installable skills.
+The two `generate-notion-styles` variants are also available through the CLI.
 
 `turkish-writing` explains Turkish sentence structure, natural phrasing,
 technical terminology, and spelling, drawing on the earlier Oku research.
@@ -251,34 +254,44 @@ Edit `skill/simple/SKILL.md` to change the shared communication principles
 and examples. All generated skills include its full body. Keep the short core principles in the
 standalone `notion-page` entry aligned when changing the philosophy.
 
-One Rust generator, `scripts/generate_skill.rs`, produces three independently
-installable entrypoints:
+The Rust generator, `scripts/generate_skill.rs`, builds self-contained skills
+using the same decorator approach as Wayfellow: a shared core plus added rules.
+Each layer is independently callable; combined skills embed the core once and
+reuse the layer sources rather than copying rules between maintained files.
 
-| Output | Workflow source | Shared source skills |
-|---|---|---|
-| `skill/generate-notion-styles/SKILL.md` | `scripts/generate-skill.template.md` + `scripts/generate-page-workflow.md` | `simple`, `turkish-writing`, `notion-page` |
-| `skill/generate-notion-styles-with-verificate/SKILL.md` | `scripts/generate-skill-with-verificate.template.md` + `scripts/generate-page-workflow.md` | `simple`, `turkish-writing`, `notion-page` |
-| `skill/verified-notes/SKILL.md` | `scripts/verified-notes.template.md` | `simple`, `turkish-writing`, `notion-page` |
+| Skill | Core and added behavior |
+|---|---|
+| `simple` | Shared communication principles, maintained directly |
+| `readable-instructions` | `simple` + procedural formatting rules |
+| `basic-make-notes` | `simple` + note rules + procedural formatting when applicable |
+| `visual-verification` | `simple` + visual checks for existing HTML |
+| `verified-notes-reviewer` | `simple` + read-only review instructions and checklist |
+| `generate-notion-styles` | `simple`, note and procedural rules, `turkish-writing`, `notion-page` + page workflow |
+| `generate-notion-styles-with-verificate` | Same page composition + visual checks |
+| `verified-notes` | Shared writing and conversion sources + source review, corrections and visual checks |
 
-The two page-generation templates contain only output metadata and a generated
-file notice. Their workflow body comes from `scripts/generate-page-workflow.md`.
-The visual variant appends
+Maintain the note and procedural layers in
+`skill/basic-make-notes/references/rules.md` and
+`skill/readable-instructions/references/rules.md`. Procedural formatting applies
+only to instructions and checklists, including those inside a larger note.
+The corresponding `scripts/*.template.md` files hold each standalone skill's
+metadata. The `simple` body is included in every generated skill.
+
+Maintain visual checks in
 `skill/generate-notion-styles-with-verificate/references/visual-verification.md`
-after the shared content. Edit that reference to change the final visual check.
+and the reviewer prompt in `skill/verified-notes/references/reviewer.md`.
+These sources feed both their standalone skills and the combined workflows.
+The reviewer standalone template adds its read-only invocation instructions.
+The page workflows use `scripts/generate-page-workflow.md`; the verified-notes
+workflow uses `scripts/verified-notes.template.md`.
 
-The verified-notes output also includes the complete
-`skill/verified-notes/references/reviewer.md` prompt. Edit that reference to change
-the review checklist or report format. Edit its workflow template to change the
-writing, review, correction, and conversion sequence.
-
-The `OUTPUTS` list explicitly selects sources for each output, so adding a skill
-does not silently make its workflow mandatory in other skills. Source skills
-require YAML `name` and `description` fields and a nonempty instruction body.
-The generator rejects invalid metadata, duplicate names within an output, and
-generated skill inputs. Shared sections are sorted by name. Ordinary relative
-Markdown links in shared skills become GitHub links for copied installations.
-Register CLI guides separately in `src/cli/skills.rs`; `include_str!` embeds the
-same documents so no source checkout is required at runtime.
+`OUTPUTS` explicitly selects the core and layers for each skill. Adding a skill
+does not silently enable it in unrelated workflows. The generator validates all
+inputs before writing, rejects duplicate source names and generated inputs, and
+embeds full rules without requiring another skill to be loaded at runtime.
+Shared source sections are sorted by name; added layers follow their declared
+order. Relative links in shared skills become portable GitHub links.
+Register CLI entries in `src/cli/skills.rs` so they work outside a checkout.
 
 Generate or check locally with Cargo:
 
@@ -288,7 +301,7 @@ cargo run --locked --example generate-skill -- --check
 cargo test --locked
 ```
 
-Edit source skills, workflow templates, the shared workflow, or reference prompts,
+Edit source skills, layer rules, workflow templates, the shared workflow, or reference prompts,
 then regenerate all outputs with the same command. Do not hand-edit generated `SKILL.md` files.
 `--check` reports missing or stale outputs without writing. All inputs are
 validated before any output is replaced; unchanged files are left alone.

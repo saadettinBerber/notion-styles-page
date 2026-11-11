@@ -102,6 +102,11 @@ fn skills_are_listed_with_descriptions_outside_the_checkout() {
         [
             "notion-page",
             "simple",
+            "readable-instructions",
+            "basic-make-notes",
+            "generate-notion-styles",
+            "generate-notion-styles-with-verificate",
+            "visual-verification",
             "turkish-writing",
             "verified-notes",
             "verified-notes-reviewer",
@@ -133,12 +138,32 @@ fn skill_commands_print_complete_documents_outside_the_checkout() {
         ("notion-page", include_str!("../skill/notion-page/SKILL.md")),
         ("simple", include_str!("../skill/simple/SKILL.md")),
         (
+            "readable-instructions",
+            include_str!("../skill/readable-instructions/SKILL.md"),
+        ),
+        (
+            "basic-make-notes",
+            include_str!("../skill/basic-make-notes/SKILL.md"),
+        ),
+        (
+            "generate-notion-styles",
+            include_str!("../skill/generate-notion-styles/SKILL.md"),
+        ),
+        (
+            "generate-notion-styles-with-verificate",
+            include_str!("../skill/generate-notion-styles-with-verificate/SKILL.md"),
+        ),
+        (
+            "visual-verification",
+            include_str!("../skill/visual-verification/SKILL.md"),
+        ),
+        (
             "verified-notes",
             include_str!("../skill/verified-notes/SKILL.md"),
         ),
         (
             "verified-notes-reviewer",
-            include_str!("../skill/verified-notes/references/reviewer.md"),
+            include_str!("../skill/verified-notes-reviewer/SKILL.md"),
         ),
         (
             "turkish-writing",
@@ -172,8 +197,6 @@ fn legacy_guide_names_resolve_to_the_current_documents() {
 
     for (legacy, current) in [
         ("communication", "simple"),
-        ("basic-make-notes", "simple"),
-        ("readable-instructions", "simple"),
         ("yazim", "writing"),
         ("cizim", "drawing"),
         ("vitrin", "showcase"),

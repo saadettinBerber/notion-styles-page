@@ -31,7 +31,7 @@ impl Fixture {
             include_str!("generate-page-workflow.md"),
         );
         fixture.write(
-            OUTPUTS[2].references[0],
+            OUTPUTS[2].references[2],
             "## Visual verification\n\nInspect HTML.",
         );
         for (folder, body) in [
@@ -42,9 +42,19 @@ impl Fixture {
             fixture.skill(folder, folder, body);
         }
         fixture.write(
-            OUTPUTS[1].references[0],
+            OUTPUTS[1].references[3],
             "## Reviewer prompt template\n\nIndependent review.",
         );
+        for (index, template) in [
+            (3, include_str!("readable-instructions.template.md")),
+            (4, include_str!("basic-make-notes.template.md")),
+            (5, include_str!("visual-verification.template.md")),
+            (6, include_str!("verified-notes-reviewer.template.md")),
+        ] {
+            fixture.write(OUTPUTS[index].template, template);
+        }
+        fixture.write(WRITING_LAYERS[0], "Self-contained notes.");
+        fixture.write(WRITING_LAYERS[1], "Procedural formatting.");
         fixture
     }
 
@@ -104,12 +114,12 @@ fn generates_separate_workflows_from_explicit_shared_sources() {
 }
 
 #[test]
-fn shared_edits_update_all_outputs_and_reviewer_edits_update_only_verified_notes() {
+fn shared_edits_update_all_outputs_and_reviewer_edits_leave_page_workflows_unchanged() {
     let fixture = Fixture::new();
     fixture.update(false).unwrap();
     let page = fixture.generate(0);
     let visual = fixture.generate(2);
-    fixture.write(OUTPUTS[1].references[0], "Updated reviewer prompt.");
+    fixture.write(OUTPUTS[1].references[3], "Updated reviewer prompt.");
     assert_eq!(page, fixture.generate(0));
     assert_eq!(visual, fixture.generate(2));
     assert!(fixture.generate(1).contains("Updated reviewer prompt."));
@@ -136,7 +146,7 @@ fn visual_variant_only_appends_verification_to_the_shared_page_body() {
             .1
     };
     let page = body(0);
-    let reference = read_text(&fixture.root.join(OUTPUTS[2].references[0])).unwrap();
+    let reference = read_text(&fixture.root.join(OUTPUTS[2].references[2])).unwrap();
     assert_eq!(body(2), format!("{page}\n\n---\n\n{}", reference.trim()));
 
     let verified = fixture.generate(1);
@@ -150,9 +160,10 @@ fn visual_variant_only_appends_verification_to_the_shared_page_body() {
     assert_eq!(verified, fixture.generate(1));
 
     let page = fixture.generate(0);
-    fixture.write(OUTPUTS[2].references[0], "Updated visual verification.");
+    fixture.write(OUTPUTS[2].references[2], "Updated visual verification.");
     assert_eq!(page, fixture.generate(0));
-    assert_eq!(verified, fixture.generate(1));
+    assert_ne!(verified, fixture.generate(1));
+    assert!(fixture.generate(1).contains("Updated visual verification."));
     assert!(fixture.update(true).is_err());
 }
 
@@ -184,7 +195,7 @@ fn missing_and_stale_outputs_are_reported_without_writing() {
     }
     fixture.update(false).unwrap();
     let old = fs::read(fixture.root.join(OUTPUTS[1].output)).unwrap();
-    fixture.write(OUTPUTS[1].references[0], "Changed review.");
+    fixture.write(OUTPUTS[1].references[3], "Changed review.");
     let error = fixture.update(true).unwrap_err().to_string();
     assert!(error.contains(OUTPUTS[1].output));
     assert!(!error.contains(OUTPUTS[0].output));
@@ -218,7 +229,7 @@ fn validates_all_inputs_before_replacing_any_output() {
         .map(|spec| fs::read(fixture.root.join(spec.output)).unwrap())
         .collect();
     fixture.skill("simple", "simple", "Pending shared change.");
-    fs::remove_file(fixture.root.join(OUTPUTS[1].references[0])).unwrap();
+    fs::remove_file(fixture.root.join(OUTPUTS[1].references[3])).unwrap();
     assert!(fixture.update(false).is_err());
     for (spec, bytes) in OUTPUTS.iter().zip(before) {
         assert_eq!(bytes, fs::read(fixture.root.join(spec.output)).unwrap());
@@ -335,7 +346,7 @@ fn rejects_generated_inputs_empty_source_lists_and_empty_references() {
             .to_string()
             .contains("No source skills")
     );
-    fixture.write(OUTPUTS[1].references[0], "  ");
+    fixture.write(OUTPUTS[1].references[3], "  ");
     assert!(fixture.update(false).is_err());
 }
 
@@ -350,10 +361,10 @@ fn rejects_symlinks_that_escape_source_and_repository_roots() {
     fixture.skill("simple", "simple", "[Outside](../linked/guide.md)");
     assert!(fixture.update(false).is_err());
     fixture.skill("simple", "simple", "Shared rules.");
-    fs::remove_file(fixture.root.join(OUTPUTS[1].references[0])).unwrap();
+    fs::remove_file(fixture.root.join(OUTPUTS[1].references[3])).unwrap();
     symlink(
         outside.path().join("guide.md"),
-        fixture.root.join(OUTPUTS[1].references[0]),
+        fixture.root.join(OUTPUTS[1].references[3]),
     )
     .unwrap();
     assert!(fixture.update(false).is_err());
@@ -364,4 +375,31 @@ fn rejects_symlinks_that_escape_source_and_repository_roots() {
     )
     .unwrap();
     assert!(fixture.update(false).is_err());
+}
+
+#[test]
+fn standalone_layers_share_their_rules_with_compositions_without_repeating_the_core() {
+    let fixture = Fixture::new();
+    fixture.update(false).unwrap();
+    for (index, rule, consumers) in [
+        (3, "Procedural formatting.", vec![0, 1, 2]),
+        (4, "Self-contained notes.", vec![0, 1, 2]),
+        (5, "Inspect HTML.", vec![1, 2]),
+        (6, "Independent review.", vec![1]),
+    ] {
+        let standalone = fixture.generate(index);
+        assert_eq!(standalone.matches(rule).count(), 1);
+        assert_eq!(standalone.matches("Shared clarity.").count(), 1);
+        assert!(!standalone.contains("Convert the page."));
+        fixture.write(OUTPUTS[index].references[0], "Updated layer.");
+        assert!(fixture.update(true).is_err());
+        fixture.update(false).unwrap();
+        for consumer in consumers {
+            let output = fixture.generate(consumer);
+            assert_eq!(output.matches("Updated layer.").count(), 1);
+            assert_eq!(output.matches("Shared clarity.").count(), 1);
+            assert!(!output.contains(rule));
+        }
+        fixture.write(OUTPUTS[index].references[0], rule);
+    }
 }

@@ -47,7 +47,7 @@ until review findings have been checked and addressed. This workflow belongs to
   Do not supply the writer's rationale, earlier conclusions, or a source summary.
 - Use the **Reviewer prompt template** included at the end of this skill. Its
   canonical file is `skill/verified-notes/references/reviewer.md`; without a source
-  checkout, `notion-page --skill verified-notes-reviewer` prints the same template.
+  checkout, `notion-page --skill verified-notes-reviewer` includes the same template in a standalone review skill.
 - The reviewer reads only. It must not edit files, run commands or tests, execute
   project code, or perform operations that could write to an external server.
 - If subagents are unavailable, make a separate pass: reopen and read the sources
@@ -69,9 +69,7 @@ until review findings have been checked and addressed. This workflow belongs to
 
 - Only after the review and corrections, follow the included `notion-page`
   conversion instructions to produce HTML.
-- Inspect the HTML in light and dark themes and at phone width. Check for
-  overflow, unclosed `:::` markers, overlapping content, and unreadable colors.
-  Fix issues before delivery. If visual inspection is unavailable, report it.
+- Apply the included **Visual verification** layer before delivery.
 
 ## 6. Report briefly
 
