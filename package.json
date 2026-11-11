@@ -1,6 +1,6 @@
 {
   "name": "@saadettinberber/notion-page",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "description": "Convert Markdown into Notion-style HTML pages",
   "bin": {
