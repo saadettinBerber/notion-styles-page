@@ -16,6 +16,14 @@ Source: [skill/simple/SKILL.md](https://github.com/saadettinBerber/notion-styles
 
 ### Simple communication
 
+**Make each unfamiliar expression understandable where the reader encounters it.**
+
+- Prefer descriptive names over unexplained labels such as `d1`, `d2`, or `&Blm.`. When an abbreviation, symbol, or identifier is necessary, explain its meaning at first use in the same sentence or immediately beside it.
+
+- Give enough context to understand the current passage without consulting another section, a glossary, a tooltip, or an external source. In independently readable tables, cards, and sections, repeat a brief explanation when needed.
+
+- Preserve exact code identifiers and source labels when accuracy requires them; explain them in the surrounding prose. If their meaning is unknown, say so rather than inventing an expansion.
+
 **Be concise: use fewer words without losing meaning.**
 
 Apply these principles when talking with the user, sharing progress, reporting
