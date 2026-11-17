@@ -250,8 +250,8 @@ pub(crate) fn matches_after(
                 Some(term.len())
             } else {
                 variants[index]
-                    .as_ref()
-                    .filter(|variant| rest.starts_with(variant.as_str()))
+                    .iter()
+                    .find(|variant| rest.starts_with(variant.as_str()))
                     .map(String::len)
             };
             if let Some(length) = length {
@@ -294,18 +294,25 @@ pub(crate) fn matches_after(
         .collect()
 }
 
-fn lowercase_first(term: &str) -> Option<String> {
+fn lowercase_first(term: &str) -> Vec<String> {
     let mut letters = term.chars();
-    let first = letters.next()?;
-    if !letters.next()?.is_lowercase() {
-        return None;
-    }
-    let lower = match first {
-        'İ' => "i".into(),
-        'I' => "ı".into(),
-        character => character.to_lowercase().collect::<String>(),
+    let (Some(first), Some(second)) = (letters.next(), letters.next()) else {
+        return Vec::new();
     };
-    Some(format!("{lower}{}", &term[first.len_utf8()..]))
+    if !second.is_lowercase() {
+        return Vec::new();
+    }
+    let lowers = match first {
+        'İ' => vec!["i".into()],
+        // The page language is unknown: `I` is `ı` in Turkish and `i` in English.
+        'I' => vec!["ı".into(), "i".into()],
+        character => vec![character.to_lowercase().collect::<String>()],
+    };
+    let rest = &term[first.len_utf8()..];
+    lowers
+        .into_iter()
+        .map(|lower| format!("{lower}{rest}"))
+        .collect()
 }
 
 fn suffix_end(text: &str, mut end: usize) -> usize {
@@ -481,12 +488,17 @@ mod tests {
     }
 
     #[test]
-    fn lowers_only_the_first_letter_with_turkish_mapping() {
+    fn lowers_only_the_first_letter_with_turkish_and_english_i() {
         assert_eq!(marked("crate'leri", &["Crate"]), [(0, "crate'leri")]);
         assert_eq!(
             marked("işlem ısı", &["İşlem", "Isı"]),
             [(0, "işlem"), (1, "ısı")]
         );
+        assert_eq!(
+            marked("an immutable interface's", &["Immutable", "Interface"]),
+            [(0, "immutable"), (1, "interface's")]
+        );
+        assert!(marked("ışık", &["İşık"]).is_empty());
         assert!(marked("brex xsd", &["BREX", "XSD"]).is_empty());
         assert!(marked("CRATE", &["Crate"]).is_empty());
     }

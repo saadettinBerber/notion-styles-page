@@ -159,7 +159,8 @@ itself are excluded.
 
 Terms match their written spelling. When the second letter is lowercase, the
 first letter can also be lowercase: `Crate` matches `crate'leri`. Turkish casing
-is respected (`İ` → `i`, `I` → `ı`); acronyms remain case-sensitive. Turkish
+is respected (`İ` → `i`, `I` → `ı`), and `I` also matches English `i`
+(`Immutable` matches `immutable`); acronyms remain case-sensitive. Turkish
 suffixes stay inside the marked word, including `BREX'e`, `XSD’nin`, and
 `veri modülünü`. A preceding letter or digit prevents a match. When terms
 overlap, the longer term wins.
